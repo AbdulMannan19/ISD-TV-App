@@ -12,6 +12,7 @@ import './App.css';
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -27,17 +28,19 @@ export default function App() {
   if (loading) return <div className="loading">Loading...</div>;
   if (!session) return <Login />;
 
+  const email = session.user?.email || '';
+
   return (
     <BrowserRouter>
       <div className="app">
-        <Topbar />
-        <Sidebar />
-        <main className="main">
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+        <Topbar collapsed={collapsed} email={email} />
+        <main className={`main${collapsed ? ' collapsed' : ''}`}>
           <Routes>
-            <Route path="/slides" element={<Slides />} />
             <Route path="/hadiths" element={<Hadiths />} />
+            <Route path="/slides" element={<Slides />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="*" element={<Navigate to="/slides" />} />
+            <Route path="*" element={<Navigate to="/hadiths" />} />
           </Routes>
         </main>
       </div>
