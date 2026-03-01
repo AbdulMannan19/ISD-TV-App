@@ -7,7 +7,6 @@ const MAX_SIZE = 2 * 1024 * 1024;
 export default function Slides() {
   const [slides, setSlides] = useState([]);
   const [uploading, setUploading] = useState(false);
-  const [replacing, setReplacing] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
@@ -20,43 +19,20 @@ export default function Slides() {
 
   useEffect(() => { fetchSlides(); }, []);
 
-  const validateFile = (file) => {
-    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPEG allowed.'); return false; }
-    if (file.size > MAX_SIZE) { alert('Max 2MB per image.'); return false; }
-    return true;
-  };
-
-  const uploadFile = async (file) => {
-    const fileName = `${Date.now()}-${file.name}`;
-    const { error } = await supabase.storage.from('slides').upload(fileName, file);
-    if (error) { alert(error.message); return null; }
-    return supabase.storage.from('slides').getPublicUrl(fileName).data.publicUrl;
-  };
-
   const handleUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file || !validateFile(file)) return;
+    if (!file) return;
+    if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPEG allowed.'); return; }
+    if (file.size > MAX_SIZE) { alert('Max 2MB per image.'); return; }
     setUploading(true);
-    const url = await uploadFile(file);
-    if (url) {
-      const max = slides.length ? Math.max(...slides.map(s => s.display_order)) : 0;
-      await supabase.from('slides').insert({ image_url: url, display_order: max + 1 });
-      fetchSlides();
-    }
+    const fileName = `${Date.now()}-${file.name}`;
+    const { error } = await supabase.storage.from('slides').upload(fileName, file);
+    if (error) { alert(error.message); setUploading(false); return; }
+    const url = supabase.storage.from('slides').getPublicUrl(fileName).data.publicUrl;
+    const max = slides.length ? Math.max(...slides.map(s => s.display_order)) : 0;
+    await supabase.from('slides').insert({ image_url: url, display_order: max + 1 });
+    fetchSlides();
     setUploading(false); setShowModal(false); e.target.value = '';
-  };
-
-  const handleReplace = async (e, slide) => {
-    const file = e.target.files[0];
-    if (!file || !validateFile(file)) return;
-    setReplacing(slide.id);
-    await supabase.storage.from('slides').remove([slide.image_url.split('/').pop()]);
-    const url = await uploadFile(file);
-    if (url) {
-      await supabase.from('slides').update({ image_url: url }).eq('id', slide.id);
-      fetchSlides();
-    }
-    setReplacing(null); e.target.value = '';
   };
 
   const deleteSlide = async (slide) => {
@@ -87,22 +63,15 @@ export default function Slides() {
       {slides.map((slide, i) => (
         <div
           key={slide.id}
-          className={`slide-card${dragIdx === i ? ' dragging' : ''}${overIdx === i ? ' drag-over' : ''}`}
+          className={`slide-item${dragIdx === i ? ' dragging' : ''}${overIdx === i ? ' drag-over' : ''}`}
           draggable
           onDragStart={() => onDragStart(i)}
           onDragOver={(e) => onDragOver(e, i)}
           onDragEnd={onDragEnd}
         >
-          <div className="slide-drag-handle">⠿</div>
-          <div className="slide-thumb"><img src={slide.image_url} alt={`Slide ${i + 1}`} /></div>
-          <div className="slide-info"><div className="slide-label">Slide {i + 1}</div></div>
-          <div className="slide-actions">
-            <input type="file" accept="image/png,image/jpeg" style={{ display: 'none' }} onChange={e => handleReplace(e, slide)} id={`r-${slide.id}`} />
-            <button className="btn btn-outline btn-sm" onClick={() => document.getElementById(`r-${slide.id}`).click()} disabled={replacing === slide.id}>
-              {replacing === slide.id ? '...' : '🔄 Replace'}
-            </button>
-            <button className="btn btn-danger btn-sm" onClick={() => deleteSlide(slide)}>🗑️ Delete</button>
-          </div>
+          <img src={slide.image_url} alt={`Slide ${i + 1}`} />
+          <div className="slide-item-label">Slide {i + 1}</div>
+          <button className="slide-item-delete" onClick={() => deleteSlide(slide)} aria-label="Delete slide">−</button>
         </div>
       ))}
 
@@ -119,7 +88,7 @@ export default function Slides() {
               <span>Upload Slide</span>
               <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
             </div>
-            <div className="slides-note" style={{ margin: '0 0 16px' }}>PNG or JPEG, 1920×1080px (Full HD), max 2MB.</div>
+            <div className="slides-note">PNG or JPEG, 1920×1080px (Full HD), max 2MB.</div>
             <div className="upload-zone" onClick={() => uploadRef.current?.click()}>
               <input type="file" accept="image/png,image/jpeg" ref={uploadRef} onChange={handleUpload} disabled={uploading} />
               <div className="upload-icon">📁</div>
