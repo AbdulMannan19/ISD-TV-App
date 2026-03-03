@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 import 'screens/prayer_times_screen.dart';
 import 'screens/hadith_screen.dart';
+import 'services/hadith_service.dart';
 import 'utils/test_controls.dart'; // TODO: Remove in production
 
 Future<void> main() async {
@@ -15,6 +17,10 @@ Future<void> main() async {
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
+  
+  // Pre-fetch today's hadiths on startup
+  final hadithService = HadithService();
+  await hadithService.getTodaysHadiths();
   
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setPreferredOrientations([
@@ -50,6 +56,7 @@ class ScreenRotator extends StatefulWidget {
 
 class _ScreenRotatorState extends State<ScreenRotator> {
   int _currentIndex = 0;
+  Timer? _midnightCheckTimer;
   
   final List<Widget> _screens = const [
     PrayerTimesScreen(),
@@ -59,6 +66,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   @override
   void initState() {
     super.initState();
+    
     // Rotate screens every 30 seconds
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 30));
@@ -69,6 +77,18 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       }
       return mounted;
     });
+    
+    // Check for new day every hour and fetch fresh hadiths
+    _midnightCheckTimer = Timer.periodic(const Duration(hours: 1), (_) async {
+      final hadithService = HadithService();
+      await hadithService.getTodaysHadiths();
+    });
+  }
+
+  @override
+  void dispose() {
+    _midnightCheckTimer?.cancel();
+    super.dispose();
   }
 
   void _goToPrevious() {

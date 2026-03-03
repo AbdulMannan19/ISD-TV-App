@@ -1,2 +1,14 @@
+admin/node_modules
+admin/.env
+
+display/.dart_tool/
+display/.flutter-plugins-dependencies
+display/.pub-cache/
+display/.pub/
+display/build/
+display/.env
+display/.idea
+display/android
+display/display.iml
+
 .vscode
-node_modules

@@ -12,10 +12,11 @@ class HadithScreen extends StatefulWidget {
 class _HadithScreenState extends State<HadithScreen> {
   late DateTime _now;
   late Timer _timer;
+  late Timer _hadithSwitchTimer;
   final HadithService _hadithService = HadithService();
 
-  String hadithText = '';
-  String hadithSource = '';
+  List<Map<String, String>> todaysHadiths = [];
+  int currentHadithIndex = 0;
   bool isLoading = true;
 
   @override
@@ -25,21 +26,31 @@ class _HadithScreenState extends State<HadithScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _now = DateTime.now());
     });
-    _loadHadith();
+    
+    // Switch hadith every 30 seconds
+    _hadithSwitchTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (todaysHadiths.length > 1) {
+        setState(() {
+          currentHadithIndex = (currentHadithIndex + 1) % todaysHadiths.length;
+        });
+      }
+    });
+    
+    _loadHadiths();
   }
 
   @override
   void dispose() {
     _timer.cancel();
+    _hadithSwitchTimer.cancel();
     super.dispose();
   }
 
-  Future<void> _loadHadith() async {
-    final hadith = await _hadithService.getRandomHadith();
+  Future<void> _loadHadiths() async {
+    final hadiths = await _hadithService.getTodaysHadiths();
     if (mounted) {
       setState(() {
-        hadithText = hadith['text']!;
-        hadithSource = hadith['source']!;
+        todaysHadiths = hadiths;
         isLoading = false;
       });
     }
@@ -59,7 +70,7 @@ class _HadithScreenState extends State<HadithScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    if (isLoading || todaysHadiths.isEmpty) {
       return const Scaffold(
         backgroundColor: Color(0xFF0A2A5E),
         body: Center(
@@ -105,6 +116,8 @@ class _HadithScreenState extends State<HadithScreen> {
   }
 
   Widget _buildHadithContent() {
+    final currentHadith = todaysHadiths[currentHadithIndex];
+    
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.95),
@@ -132,7 +145,7 @@ class _HadithScreenState extends State<HadithScreen> {
           Expanded(
             child: SingleChildScrollView(
               child: Text(
-                hadithText,
+                currentHadith['text']!,
                 style: const TextStyle(
                   color: Color(0xFF1a1a2e),
                   fontSize: 32,
@@ -154,7 +167,7 @@ class _HadithScreenState extends State<HadithScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              hadithSource,
+              currentHadith['source']!,
               style: TextStyle(
                 color: const Color(0xFF0A2A5E).withOpacity(0.7),
                 fontSize: 16,

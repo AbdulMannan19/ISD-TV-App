@@ -4,7 +4,7 @@ clear
 npm start
 
 cd display
-flutter run -d chrome
+flutter run -d windows
 
 
 git status
