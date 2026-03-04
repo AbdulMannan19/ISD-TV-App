@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../services/hadith_service.dart';
+import '../services/verse_service.dart';
 
-class HadithScreen extends StatefulWidget {
-  const HadithScreen({super.key});
+class VerseScreen extends StatefulWidget {
+  const VerseScreen({super.key});
 
   @override
-  State<HadithScreen> createState() => _HadithScreenState();
+  State<VerseScreen> createState() => _VerseScreenState();
 }
 
-class _HadithScreenState extends State<HadithScreen> {
+class _VerseScreenState extends State<VerseScreen> {
   late DateTime _now;
   late Timer _timer;
-  final HadithService _hadithService = HadithService();
+  final VerseService _verseService = VerseService();
 
-  Map<String, String>? todaysHadith;
+  Map<String, String>? todaysVerse;
   bool isLoading = true;
 
   @override
@@ -25,7 +25,7 @@ class _HadithScreenState extends State<HadithScreen> {
       setState(() => _now = DateTime.now());
     });
     
-    _loadHadith();
+    _loadVerse();
   }
 
   @override
@@ -34,11 +34,11 @@ class _HadithScreenState extends State<HadithScreen> {
     super.dispose();
   }
 
-  Future<void> _loadHadith() async {
-    final hadith = await _hadithService.getTodaysHadith();
+  Future<void> _loadVerse() async {
+    final verse = await _verseService.getTodaysVerse();
     if (mounted) {
       setState(() {
-        todaysHadith = hadith;
+        todaysVerse = verse;
         isLoading = false;
       });
     }
@@ -58,7 +58,7 @@ class _HadithScreenState extends State<HadithScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || todaysHadith == null) {
+    if (isLoading || todaysVerse == null) {
       return const Scaffold(
         backgroundColor: Color(0xFF0A2A5E),
         body: Center(
@@ -116,7 +116,7 @@ class _HadithScreenState extends State<HadithScreen> {
         children: [
           // Header
           Text(
-            'HADITH OF THE DAY',
+            'VERSE OF THE DAY',
             style: TextStyle(
               color: const Color(0xFF0A2A5E).withOpacity(0.6),
               fontSize: 16,
@@ -127,11 +127,11 @@ class _HadithScreenState extends State<HadithScreen> {
           
           const SizedBox(height: 40),
           
-          // Hadith text
+          // Verse text
           Expanded(
             child: SingleChildScrollView(
               child: Text(
-                todaysHadith!['text']!,
+                todaysVerse!['text']!,
                 style: const TextStyle(
                   color: Color(0xFF1a1a2e),
                   fontSize: 32,
@@ -153,7 +153,7 @@ class _HadithScreenState extends State<HadithScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              todaysHadith!['source']!,
+              todaysVerse!['source']!,
               style: TextStyle(
                 color: const Color(0xFF0A2A5E).withOpacity(0.7),
                 fontSize: 16,

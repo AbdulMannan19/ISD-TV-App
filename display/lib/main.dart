@@ -5,9 +5,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
 import 'screens/prayer_times_screen.dart';
 import 'screens/hadith_screen.dart';
+import 'screens/dua_screen.dart';
+import 'screens/verse_screen.dart';
 import 'screens/slides_screen.dart';
 import 'services/hadith_service.dart';
-import 'utils/test_controls.dart'; // TODO: Remove in production
+import 'services/dua_service.dart';
+import 'services/verse_service.dart';
+import 'services/slides_service.dart';
+import 'utils/test_controls.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,9 +24,16 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
   
-  // Pre-fetch today's hadiths on startup
+  // Pre-fetch today's content on startup
   final hadithService = HadithService();
-  await hadithService.getTodaysHadiths();
+  final duaService = DuaService();
+  final verseService = VerseService();
+  
+  await Future.wait([
+    hadithService.getTodaysHadith(),
+    duaService.getTodaysDua(),
+    verseService.getTodaysVerse(),
+  ]);
   
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setPreferredOrientations([
@@ -58,21 +70,18 @@ class ScreenRotator extends StatefulWidget {
 class _ScreenRotatorState extends State<ScreenRotator> {
   int _currentIndex = 0;
   Timer? _midnightCheckTimer;
+  List<Widget> _screens = [];
+  bool _screensBuilt = false;
   
-  final List<Widget> _screens = const [
-    PrayerTimesScreen(),
-    HadithScreen(),
-    SlidesScreen(),
-  ];
-
   @override
   void initState() {
     super.initState();
+    _buildScreens();
     
     // Rotate screens every 30 seconds
     Future.doWhile(() async {
       await Future.delayed(const Duration(seconds: 30));
-      if (mounted) {
+      if (mounted && _screensBuilt) {
         setState(() {
           _currentIndex = (_currentIndex + 1) % _screens.length;
         });
@@ -80,11 +89,42 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       return mounted;
     });
     
-    // Check for new day every hour and fetch fresh hadiths
+    // Check for new day every hour and fetch fresh content
     _midnightCheckTimer = Timer.periodic(const Duration(hours: 1), (_) async {
       final hadithService = HadithService();
-      await hadithService.getTodaysHadiths();
+      final duaService = DuaService();
+      final verseService = VerseService();
+      
+      await Future.wait([
+        hadithService.getTodaysHadith(),
+        duaService.getTodaysDua(),
+        verseService.getTodaysVerse(),
+      ]);
     });
+  }
+
+  Future<void> _buildScreens() async {
+    final slidesService = SlidesService();
+    final slides = await slidesService.getActiveSlides();
+    
+    final screens = <Widget>[
+      const PrayerTimesScreen(),
+      const HadithScreen(),
+      const DuaScreen(),
+      const VerseScreen(),
+    ];
+    
+    // Add one SlidesScreen that will rotate through all slides internally
+    if (slides.isNotEmpty) {
+      screens.add(const SlidesScreen());
+    }
+    
+    if (mounted) {
+      setState(() {
+        _screens = screens;
+        _screensBuilt = true;
+      });
+    }
   }
 
   @override
@@ -94,28 +134,39 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   }
 
   void _goToPrevious() {
-    setState(() {
-      _currentIndex = (_currentIndex - 1 + _screens.length) % _screens.length;
-    });
+    if (_screensBuilt) {
+      setState(() {
+        _currentIndex = (_currentIndex - 1 + _screens.length) % _screens.length;
+      });
+    }
   }
 
   void _goToNext() {
-    setState(() {
-      _currentIndex = (_currentIndex + 1) % _screens.length;
-    });
+    if (_screensBuilt) {
+      setState(() {
+        _currentIndex = (_currentIndex + 1) % _screens.length;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (!_screensBuilt) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF0A2A5E),
+        body: Center(
+          child: CircularProgressIndicator(color: Colors.white),
+        ),
+      );
+    }
+
     return Stack(
       children: [
-        // Use IndexedStack to keep all screens mounted and loaded
         IndexedStack(
           index: _currentIndex,
           children: _screens,
         ),
         
-        // TODO: Remove TestControls in production
         TestControls(
           onPrevious: _goToPrevious,
           onNext: _goToNext,
