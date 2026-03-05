@@ -87,6 +87,11 @@ class PrayerTimesService {
     }
   }
 
+  /// Fetches only iqamah times from DB (no API call). Returns a map of prayer name -> iqamah time in 12h format.
+  Future<Map<String, String>> fetchIqamahOnly() async {
+    return _fetchIqamahFromDb();
+  }
+
   Future<void> _updateDbTimes(
     String fajrA, String zuhrA, String asrA, String maghribA, String ishaA,
     String fajrI, String zuhrI, String asrI, String maghribI, String ishaI,

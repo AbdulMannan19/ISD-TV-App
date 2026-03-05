@@ -39,8 +39,26 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         .from('prayer_times')
         .stream(primaryKey: ['prayer'])
         .listen((_) {
-          if (mounted) _loadPrayerTimes();
+          if (mounted) _refreshIqamah();
         });
+  }
+
+  Future<void> _refreshIqamah() async {
+    final iqamah = await _prayerService.fetchIqamahOnly();
+    if (iqamah.isEmpty || !mounted) return;
+
+    final nameToKey = {'FAJR': 'fajr', 'DHUHR': 'zuhr', 'ASR': 'asr', 'MAGHRIB': 'maghrib', 'ISHA': 'isha'};
+    setState(() {
+      prayers = prayers.map((p) {
+        final key = nameToKey[p['name']];
+        final newIqamah = key != null ? iqamah[key] : null;
+        return {
+          'name': p['name']!,
+          'start': p['start']!,
+          'iqamah': newIqamah ?? p['iqamah']!,
+        };
+      }).toList();
+    });
   }
 
   Future<void> _loadPrayerTimes() async {

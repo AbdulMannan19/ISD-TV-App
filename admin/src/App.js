@@ -39,7 +39,7 @@ function AppContent() {
           <Route path="/slides" element={<Slides />} />
           <Route path="/prayer-times" element={<PrayerTimes />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="*" element={<Navigate to="/slides" />} />
+          <Route path="*" element={<Navigate to="/prayer-times" />} />
         </Routes>
       </main>
     </div>

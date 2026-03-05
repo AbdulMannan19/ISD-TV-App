@@ -51,8 +51,8 @@ const ClockIcon = () => (
 );
 
 const navItems = [
-  { to: '/slides', label: 'Slides', icon: SlidesIcon },
   { to: '/prayer-times', label: 'Prayer Times', icon: ClockIcon },
+  { to: '/slides', label: 'Slides', icon: SlidesIcon },
   { to: '/profile', label: 'Profile', icon: UserIcon },
 ];
 
