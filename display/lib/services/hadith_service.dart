@@ -45,7 +45,11 @@ class HadithService {
         .select('id')
         .count(CountOption.exact);
     
-    final totalCount = countResponse.count ?? 1000;
+    final totalCount = countResponse.count ?? 0;
+    
+    if (totalCount == 0) {
+      return _getFallbackHadith();
+    }
     
     // Generate deterministic ID based on today's date
     final now = DateTime.now();

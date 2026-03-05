@@ -40,7 +40,11 @@ class DuaService {
         .select('id')
         .count(CountOption.exact);
     
-    final totalCount = countResponse.count ?? 100;
+    final totalCount = countResponse.count ?? 0;
+    
+    if (totalCount == 0) {
+      return _getFallbackDua();
+    }
     
     final now = DateTime.now();
     final seed = now.year * 10000 + now.month * 100 + now.day + 1;

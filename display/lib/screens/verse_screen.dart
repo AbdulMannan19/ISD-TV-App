@@ -182,11 +182,20 @@ class _VerseScreenState extends State<VerseScreen> {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Center(
-                child: Icon(
-                  Icons.qr_code_2,
-                  size: 120,
-                  color: Colors.black54,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Image.asset(
+                  'assets/images/qr_code.jpeg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) {
+                    return const Center(
+                      child: Icon(
+                        Icons.qr_code_2,
+                        size: 120,
+                        color: Colors.black54,
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

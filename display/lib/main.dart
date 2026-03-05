@@ -72,11 +72,13 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   Timer? _midnightCheckTimer;
   List<Widget> _screens = [];
   bool _screensBuilt = false;
+  StreamSubscription? _slidesSubscription;
   
   @override
   void initState() {
     super.initState();
     _buildScreens();
+    _listenToSlideChanges();
     
     // Rotate screens every 30 seconds
     Future.doWhile(() async {
@@ -103,6 +105,17 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     });
   }
 
+  void _listenToSlideChanges() {
+    _slidesSubscription = Supabase.instance.client
+        .from('slides')
+        .stream(primaryKey: ['id'])
+        .listen((data) {
+          if (mounted) {
+            _buildScreens();
+          }
+        });
+  }
+
   Future<void> _buildScreens() async {
     final slidesService = SlidesService();
     final slides = await slidesService.getActiveSlides();
@@ -114,13 +127,17 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       const VerseScreen(),
     ];
     
-    // Add one SlidesScreen that will rotate through all slides internally
-    if (slides.isNotEmpty) {
-      screens.add(const SlidesScreen());
+    // Add one screen per slide
+    for (var slide in slides) {
+      screens.add(SlidesScreen(slide: slide));
     }
     
     if (mounted) {
       setState(() {
+        // Adjust current index if it's out of bounds
+        if (_currentIndex >= screens.length && screens.isNotEmpty) {
+          _currentIndex = 0;
+        }
         _screens = screens;
         _screensBuilt = true;
       });
@@ -130,6 +147,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   @override
   void dispose() {
     _midnightCheckTimer?.cancel();
+    _slidesSubscription?.cancel();
     super.dispose();
   }
 

@@ -12,9 +12,3 @@ git add .
 git commit -m "quick commit"
 git push
 clear
-
-
-
-To Do
-
-1) Inviting new user workflow
