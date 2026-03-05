@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { supabase } from './supabase';
 import Topbar from './components/Topbar/Topbar';
 import Sidebar from './components/Sidebar/Sidebar';
@@ -13,31 +13,47 @@ function AppContent() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
   const [collapsed, setCollapsed] = useState(false);
-  const location = useLocation();
+  const [needsPassword, setNeedsPassword] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('Auth event:', event);
       setSession(session);
+      setLoading(false);
+
+      // Supabase fires this event after verifying the invite token
+      // and redirecting back with access_token + refresh_token in hash
+      if (event === 'SIGNED_IN') {
+        const hash = window.location.hash;
+        if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+          setNeedsPassword(true);
+        }
+      }
     });
+
     return () => subscription.unsubscribe();
   }, []);
 
   if (loading) return <div className="loading">Loading...</div>;
 
-  // Check if user is on password setup page via hash
-  const hash = window.location.hash;
-  const hashParams = new URLSearchParams(hash.substring(1));
-  const type = hashParams.get('type');
-  
-  if (type === 'invite' || type === 'recovery') {
-    return <SetPassword />;
+  // User just came from invite link, has session but needs to set password
+  if (needsPassword && session) {
+    return <SetPassword onDone={() => { setNeedsPassword(false); window.location.hash = ''; }} />;
   }
 
-  if (!session) return <Login />;
+  // No session and hash has invite params = Supabase is still processing the redirect
+  if (!session) {
+    const hash = window.location.hash;
+    if (hash.includes('access_token') && (hash.includes('type=invite') || hash.includes('type=recovery'))) {
+      return <div className="loading">Processing invitation...</div>;
+    }
+    return <Login />;
+  }
 
   const email = session.user?.email || '';
 
