@@ -22,17 +22,12 @@ function AppContent() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('Auth event:', event);
       setSession(session);
       setLoading(false);
 
-      // Supabase fires this event after verifying the invite token
-      // and redirecting back with access_token + refresh_token in hash
-      if (event === 'SIGNED_IN') {
-        const hash = window.location.hash;
-        if (hash.includes('type=invite') || hash.includes('type=recovery')) {
-          setNeedsPassword(true);
-        }
+      const hash = window.location.hash;
+      if (hash.includes('type=invite') || hash.includes('type=recovery')) {
+        setNeedsPassword(true);
       }
     });
 
