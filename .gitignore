@@ -12,7 +12,6 @@ display/android
 display/display.iml
 display/linux/
 display/macos/
-display/windows/
 display/ios/
 display/web/
 
