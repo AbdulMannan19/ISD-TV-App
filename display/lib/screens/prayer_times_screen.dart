@@ -104,7 +104,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   Widget build(BuildContext context) {
     if (isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0A2A5E),
+        backgroundColor: Color(0xFF1A3A6B),
         body: Center(
           child: CircularProgressIndicator(color: Colors.white),
         ),
@@ -112,13 +112,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0A2A5E),
+      backgroundColor: const Color(0xFF1A3A6B),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D3B8C), Color(0xFF051840), Color(0xFF0A2A5E)],
+            colors: [Color(0xFF1E4D8C), Color(0xFF0F2D5E), Color(0xFF1A3A6B)],
           ),
         ),
         child: SafeArea(
@@ -168,6 +168,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
       ),
       padding: const EdgeInsets.all(16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
@@ -203,11 +204,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           const SizedBox(height: 8),
           const Divider(color: Colors.white24),
           const SizedBox(height: 4),
-          ...prayers.map((p) => _prayerRow(p)),
+          // Each prayer row gets equal space
+          ...prayers.map((p) => Expanded(child: _prayerRow(p))),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1855A0).withOpacity(0.45),
+              color: const Color(0xFF1E5BB8).withOpacity(0.45),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(color: Colors.white24),
             ),
@@ -241,8 +243,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   }
 
   Widget _prayerRow(Map<String, String> p) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
+    return Center(
       child: Row(
         children: [
           Expanded(
@@ -252,7 +253,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
-                fontSize: 12,
+                fontSize: 13,
                 letterSpacing: 1.5,
               ),
             ),
@@ -275,7 +276,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp[0],
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 22,
+            fontSize: 28,
             fontWeight: FontWeight.w300,
           ),
         ),
@@ -284,7 +285,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp.length > 1 ? sp[1] : '',
           style: TextStyle(
             color: Colors.white.withOpacity(0.65),
-            fontSize: 11,
+            fontSize: 13,
           ),
         ),
       ],
