@@ -42,7 +42,7 @@ class _DuaScreenState extends State<DuaScreen> {
     final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
     final minute = dt.minute.toString().padLeft(2, '0');
     final period = dt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute$period';
+    return '$hour:$minute $period';
   }
 
   String _formatDate(DateTime dt) {
@@ -167,8 +167,7 @@ class _DuaScreenState extends State<DuaScreen> {
                 style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 0.5)),
           ]),
           Column(children: [
-            Text(_formatTime(_now),
-              style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w600, letterSpacing: -1)),
+            _buildClock(),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
               _sunInfo('☀️', 'SUNRISE', shared.sunrise),
@@ -234,9 +233,9 @@ class _DuaScreenState extends State<DuaScreen> {
       children: [
         Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
-        Text(p['adhan']!, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+        _subscriptTime(p['adhan']!, 15, FontWeight.w700),
         const SizedBox(height: 2),
-        Text(p['iqamah']!, style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 15, fontWeight: FontWeight.w700)),
+        _subscriptTime(p['iqamah']!, 15, FontWeight.w700, opacity: 0.7),
       ],
     );
   }
@@ -246,7 +245,25 @@ class _DuaScreenState extends State<DuaScreen> {
       children: [
         const Text("JUMU'AH", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
-        Text(time, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+        _subscriptTime(time, 15, FontWeight.w700),
+      ],
+    );
+  }
+
+  Widget _buildClock() {
+    final timeStr = _formatTime(_now);
+    final sp = timeStr.split(' ');
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(sp[0],
+          style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, letterSpacing: -1)),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6, left: 4),
+          child: Text(sp.length > 1 ? sp[1] : '',
+            style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w500)),
+        ),
       ],
     );
   }
@@ -257,7 +274,23 @@ class _DuaScreenState extends State<DuaScreen> {
       const SizedBox(height: 4),
       Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
       const SizedBox(height: 2),
-      Text(time, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w500)),
+      _subscriptTime(time, 13, FontWeight.w500),
     ]);
+  }
+
+  Widget _subscriptTime(String time, double fontSize, FontWeight weight, {double opacity = 1.0}) {
+    final sp = time.split(' ');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(sp[0], style: TextStyle(color: Colors.white.withOpacity(opacity), fontSize: fontSize, fontWeight: weight)),
+        if (sp.length > 1)
+          Padding(
+            padding: EdgeInsets.only(bottom: 1, left: 2),
+            child: Text(sp[1], style: TextStyle(color: Colors.white70.withOpacity(opacity), fontSize: fontSize * 0.55, fontWeight: FontWeight.w500)),
+          ),
+      ],
+    );
   }
 }

@@ -83,9 +83,9 @@ class SharedData {
     if (totalMin >= 60) {
       final hrs = totalMin ~/ 60;
       final mins = totalMin % 60;
-      return mins > 0 ? '${hrs}HR ${mins}MIN' : '${hrs}HR';
+      return mins > 0 ? '${hrs} HR ${mins} MIN' : '${hrs} HR';
     }
-    return '${totalMin}MIN';
+    return '${totalMin} MIN';
   }
 
   DateTime? _parseTime(String time, DateTime now) {

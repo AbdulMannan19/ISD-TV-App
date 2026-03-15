@@ -226,14 +226,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   ),
                 ),
                 const SizedBox(width: 20),
-                Text(
-                  jummah,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                _subscriptTime(jummah, 18, FontWeight.w600),
               ],
             ),
           ),
@@ -442,14 +435,23 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           ),
         ),
         const SizedBox(height: 2),
-        Text(
-          time,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
+        _subscriptTime(time, 14, FontWeight.w500),
+      ],
+    );
+  }
+
+  Widget _subscriptTime(String time, double fontSize, FontWeight weight) {
+    final sp = time.split(' ');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Text(sp[0], style: TextStyle(color: Colors.white, fontSize: fontSize, fontWeight: weight)),
+        if (sp.length > 1)
+          Padding(
+            padding: EdgeInsets.only(bottom: 1, left: 2),
+            child: Text(sp[1], style: TextStyle(color: Colors.white70, fontSize: fontSize * 0.55, fontWeight: FontWeight.w500)),
           ),
-        ),
       ],
     );
   }
