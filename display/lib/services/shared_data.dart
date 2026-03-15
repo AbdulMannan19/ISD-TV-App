@@ -30,10 +30,12 @@ class SharedData {
     try {
       final response = await Supabase.instance.client
           .from('prayer_times')
-          .select('iqamah');
+          .select('prayer, iqamah');
       final now = DateTime.now();
       final times = <DateTime>[];
       for (final row in response as List) {
+        final prayer = row['prayer'] as String;
+        if (prayer.startsWith('jummah')) continue;
         final dt = _parseTime(row['iqamah'] as String, now);
         if (dt != null) times.add(dt);
       }
