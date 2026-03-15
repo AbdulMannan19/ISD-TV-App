@@ -54,7 +54,7 @@ class _VerseScreenState extends State<VerseScreen> {
   Widget build(BuildContext context) {
     if (isLoading || todaysVerse == null) {
       return const Scaffold(
-        backgroundColor: Color(0xFF288A8A),
+        backgroundColor: Color(0xFF1A3A6B),
         body: Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
@@ -65,7 +65,7 @@ class _VerseScreenState extends State<VerseScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF2A9E9E), Color(0xFF1A6B6B), Color(0xFF288A8A)],
+            colors: [Color(0xFF1E4D8C), Color(0xFF0F2D5E), Color(0xFF1A3A6B)],
           ),
         ),
         child: SafeArea(
