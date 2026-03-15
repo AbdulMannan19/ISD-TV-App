@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'display/**'
+      - '.github/workflows/**'
 
 jobs:
   build:
@@ -23,6 +24,16 @@ jobs:
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" > display/.env
           echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> display/.env
+
+      - name: Decode keystore
+        run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > display/android/app/upload-keystore.jks
+
+      - name: Create key.properties
+        run: |
+          echo "storePassword=${{ secrets.KEYSTORE_PASSWORD }}" > display/android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> display/android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> display/android/key.properties
+          echo "storeFile=upload-keystore.jks" >> display/android/key.properties
 
       - name: Install dependencies
         run: flutter pub get
