@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math' as math;
+import '../services/shared_data.dart';
 
 class ProhibitedTimeScreen extends StatefulWidget {
   final DateTime endTime;
@@ -345,9 +346,9 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '31 MIN',
-                  style: TextStyle(
+                Text(
+                  SharedData.instance.getCountdown(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,

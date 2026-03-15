@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/prayer_times_service.dart';
+import '../services/shared_data.dart';
 
 class PrayerTimesScreen extends StatefulWidget {
   const PrayerTimesScreen({super.key});
@@ -17,8 +18,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   StreamSubscription? _iqamahSubscription;
 
   List<Map<String, String>> prayers = [];
-  String sunrise = '6:59 AM';
-  String sunset = '6:24 PM';
+  String sunrise = '';
+  String sunset = '';
   String jummah1 = '1:45 PM';
   String jummah2 = '1:45 PM';
   bool isLoading = true;
@@ -375,9 +376,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '31 MIN',
-                  style: TextStyle(
+                Text(
+                  SharedData.instance.getCountdown(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,

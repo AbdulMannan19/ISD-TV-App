@@ -16,6 +16,7 @@ import 'services/verse_service.dart';
 import 'services/slides_service.dart';
 import 'services/prayer_times_service.dart';
 import 'services/update_service.dart';
+import 'services/shared_data.dart';
 import 'test/test_controls.dart';
 
 Future<void> main() async {
@@ -46,6 +47,9 @@ Future<void> main() async {
   
   // Check for app updates (Android only, non-blocking)
   UpdateService.checkForUpdate();
+  
+  // Load shared data (sunrise, sunset, iqamah countdown)
+  await SharedData.instance.init();
   
   runApp(const DisplayApp());
 }
@@ -230,6 +234,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
         times.add(row['iqamah'] as String);
       }
       setState(() => _iqamahTimes = times);
+      // Refresh shared countdown data
+      await SharedData.instance.refreshIqamah();
     } catch (e) {
       print('Error fetching iqamah times: $e');
     }
