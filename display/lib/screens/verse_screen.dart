@@ -145,12 +145,9 @@ class _VerseScreenState extends State<VerseScreen> {
           Column(children: [
             Container(
               width: 80, height: 80,
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10)),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
-              ),
+              decoration: BoxDecoration(color: Colors.white),
+              child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
             ),
             const SizedBox(height: 8),
             Container(

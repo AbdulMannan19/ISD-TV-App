@@ -301,15 +301,11 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               Container(
                 width: 80,
                 height: 80,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
-                ),
+                child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
               ),
               const SizedBox(height: 8),
               Container(

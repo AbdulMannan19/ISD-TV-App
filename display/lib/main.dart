@@ -81,6 +81,7 @@ class ScreenRotator extends StatefulWidget {
 class _ScreenRotatorState extends State<ScreenRotator> {
   int _currentIndex = 0;
   Timer? _midnightCheckTimer;
+  Timer? _prayerRefreshTimer;
   Timer? _iqamahCheckTimer;
   Timer? _prohibitedCheckTimer;
   Timer? _rotationTimer;
@@ -107,16 +108,42 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _startIqamahCheck();
     _startProhibitedCheck();
     
-    _midnightCheckTimer = Timer.periodic(const Duration(hours: 1), (_) async {
-      final hadithService = HadithService();
-      final duaService = DuaService();
-      final verseService = VerseService();
-      
-      await Future.wait([
-        hadithService.getTodaysHadith(),
-        duaService.getTodaysDua(),
-        verseService.getTodaysVerse(),
-      ]);
+    _scheduleMidnightRefresh();
+
+    _schedulePrayerRefresh();
+  }
+
+  void _scheduleMidnightRefresh() {
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    _midnightCheckTimer = Timer(nextMidnight.difference(now), () {
+      _refreshDailyContent();
+      _midnightCheckTimer = Timer.periodic(const Duration(hours: 24), (_) {
+        _refreshDailyContent();
+      });
+    });
+  }
+
+  Future<void> _refreshDailyContent() async {
+    await Future.wait([
+      HadithService().getTodaysHadith(),
+      DuaService().getTodaysDua(),
+      VerseService().getTodaysVerse(),
+    ]);
+  }
+
+  void _schedulePrayerRefresh() {
+    final now = DateTime.now();
+    final nextNoon = DateTime(now.year, now.month, now.day, 12);
+    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final next = now.isBefore(nextNoon) ? nextNoon : nextMidnight;
+    _prayerRefreshTimer = Timer(next.difference(now), () {
+      _fetchPrayerData();
+      _fetchIqamahTimes();
+      _prayerRefreshTimer = Timer.periodic(const Duration(hours: 12), (_) {
+        _fetchPrayerData();
+        _fetchIqamahTimes();
+      });
     });
   }
 
@@ -307,6 +334,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   @override
   void dispose() {
     _midnightCheckTimer?.cancel();
+    _prayerRefreshTimer?.cancel();
     _iqamahCheckTimer?.cancel();
     _prohibitedCheckTimer?.cancel();
     _rotationTimer?.cancel();
