@@ -208,9 +208,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF1E5BB8).withOpacity(0.45),
+              color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white24),
+              border: Border.all(color: Colors.white.withOpacity(0.15)),
             ),
             padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             child: Row(

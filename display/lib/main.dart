@@ -391,7 +391,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   Widget build(BuildContext context) {
     if (!_screensBuilt) {
       return const Scaffold(
-        backgroundColor: Color(0xFF0A2A5E),
+        backgroundColor: Color(0xFF000428),
         body: Center(
           child: CircularProgressIndicator(color: Colors.white),
         ),

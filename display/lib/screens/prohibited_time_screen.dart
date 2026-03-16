@@ -73,7 +73,7 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D3B8C), Color(0xFF051840), Color(0xFF0A2A5E)],
+            colors: [Color(0xFF000428), Color(0xFF004E92), Color(0xFF001F54)],
           ),
         ),
         child: SafeArea(
