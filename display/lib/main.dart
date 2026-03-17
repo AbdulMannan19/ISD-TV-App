@@ -228,6 +228,22 @@ class _ScreenRotatorState extends State<ScreenRotator> {
         _inProhibitedMode = true;
         _prohibitedEndTime = sunsetDateTime;
       });
+      return;
+    }
+
+    // Check if within 15 min before Dhuhr start time (solar zenith)
+    final dhuhrStart = _prayersList
+        .where((p) => p['name'] == 'DHUHR')
+        .map((p) => _parseTimeToday(p['start']!))
+        .firstOrNull;
+    if (dhuhrStart != null) {
+      final dhuhrProhibitedStart = dhuhrStart.subtract(const Duration(minutes: 15));
+      if (now.isAfter(dhuhrProhibitedStart) && now.isBefore(dhuhrStart)) {
+        setState(() {
+          _inProhibitedMode = true;
+          _prohibitedEndTime = dhuhrStart;
+        });
+      }
     }
   }
 
