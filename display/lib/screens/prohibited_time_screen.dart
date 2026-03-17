@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import 'dart:math' as math;
 import '../services/shared_data.dart';
 
 class ProhibitedTimeScreen extends StatefulWidget {
@@ -53,21 +52,18 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
   String _formatTime(DateTime dt) {
     final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
     final minute = dt.minute.toString().padLeft(2, '0');
-    final second = dt.second.toString().padLeft(2, '0');
     final period = dt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute:$second $period';
+    return '$hour:$minute $period';
   }
 
   String _formatDate(DateTime dt) {
-    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return '${days[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0A2A5E),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
@@ -78,391 +74,251 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(flex: 3, child: _buildLeftPanel()),
-                const SizedBox(width: 16),
-                Expanded(flex: 2, child: _buildRightPanel()),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLeftPanel() {
-    return Column(
-      children: [
-        Expanded(
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.07),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.white.withOpacity(0.15)),
-            ),
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20.0),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDC2626),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Text(
-                    'PROHIBITED TIME FOR SALAH',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(flex: 7, child: _buildContent()),
+                      const SizedBox(width: 20),
+                      Expanded(flex: 3, child: _buildInfoPanel()),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 40),
-                _buildCircularTimer(),
+                const SizedBox(height: 12),
+                _buildPrayerBar(),
               ],
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        _buildPrayerTable(),
-      ],
-    );
-  }
-
-  Widget _buildCircularTimer() {
-    final progress = _remainingMinutes / 15.0;
-    return Container(
-      width: 200,
-      height: 200,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          CustomPaint(
-            size: const Size(200, 200),
-            painter: _CircularProgressPainter(progress: progress),
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'WAIT',
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 20,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 2,
-                ),
-              ),
-              Text(
-                '$_remainingMinutes',
-                style: const TextStyle(
-                  color: Color(0xFFDC2626),
-                  fontSize: 56,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                _remainingMinutes == 1 ? 'MINUTE' : 'MINUTES',
-                style: TextStyle(
-                  color: Colors.grey[500],
-                  fontSize: 14,
-                  letterSpacing: 1.5,
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildPrayerTable() {
+  Widget _buildContent() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.07),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
+        color: Colors.white.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(36),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              const Expanded(flex: 2, child: SizedBox()),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'STARTS',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
-                    fontSize: 10,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              Expanded(
-                flex: 3,
-                child: Text(
-                  'IQAMAH',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
-                    fontSize: 10,
-                    letterSpacing: 2,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Divider(color: Colors.white24),
-          const SizedBox(height: 4),
-          ...widget.prayers.map((p) => _prayerRow(p)),
-        ],
-      ),
-    );
-  }
-
-  Widget _prayerRow(Map<String, String> p) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        children: [
+          Text('PROHIBITED TIME FOR VOLUNTARY SALAH',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.8),
+              fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 3)),
+          const SizedBox(height: 24),
           Expanded(
-            flex: 2,
-            child: Text(
-              p['name']!,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-                letterSpacing: 1.5,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.timer_outlined, size: 48, color: const Color(0xFFC48F2A).withOpacity(0.5)),
+                  const SizedBox(height: 16),
+                  Text('$_remainingMinutes',
+                    style: const TextStyle(color: Color(0xFFC48F2A),
+                      fontSize: 72, fontWeight: FontWeight.w700, height: 1)),
+                  const SizedBox(height: 4),
+                  Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
+                    style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.6),
+                      fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 2)),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Text(
+                      '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: const Color(0xFF1a1a2e).withOpacity(0.55),
+                        fontSize: 15, fontStyle: FontStyle.italic, height: 1.6)),
+                  ),
+                  const SizedBox(height: 8),
+                  Text('— Sahih Muslim, 831',
+                    style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.6),
+                      fontSize: 13, fontWeight: FontWeight.w600)),
+                ],
               ),
             ),
           ),
-          Expanded(flex: 3, child: _timeCell(p['start']!)),
-          Expanded(flex: 3, child: _timeCell(p['iqamah']!)),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFC48F2A).withOpacity(0.08),
+              borderRadius: BorderRadius.circular(8)),
+            child: Text('Fard prayers can still be prayed',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.7),
+                fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+          ),
         ],
       ),
     );
   }
 
-  Widget _timeCell(String time) {
-    final sp = time.split(' ');
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
-      children: [
-        Text(
-          sp[0],
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-        const SizedBox(width: 2),
-        Text(
-          sp.length > 1 ? sp[1] : '',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.65),
-            fontSize: 9,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRightPanel() {
+  Widget _buildInfoPanel() {
+    final shared = SharedData.instance;
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(12),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white38),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Islamic Society of Denton',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                _formatDate(_now),
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.5),
-                  fontSize: 12,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          _liveClock(),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
+          Column(children: [
+            Container(
+              width: 80, height: 80,
+              decoration: const BoxDecoration(color: Colors.white),
+              child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
             ),
-            child: Column(
-              children: [
-                Text(
-                  'NEXT IQAMAH IN',
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.55),
-                    fontSize: 11,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  SharedData.instance.getCountdown(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(border: Border.all(color: Colors.white38), borderRadius: BorderRadius.circular(8)),
+              child: const Text('Islamic Society of Denton', textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
             ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _sunInfo('☀️', 'SUNRISE', widget.sunrise),
-              _sunInfo('🌅', 'SUNSET', widget.sunset),
-            ],
-          ),
+            const SizedBox(height: 4),
+            Text(_formatDate(_now), textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10, letterSpacing: 0.5)),
+            if (shared.hijriDate.isNotEmpty)
+              Text(shared.hijriDate, textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 0.5)),
+          ]),
+          Column(children: [
+            _buildClock(),
+            const SizedBox(height: 8),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+              _sunInfo('☀️', 'SUNRISE', shared.sunrise),
+              _sunInfo('🌅', 'SUNSET', shared.sunset),
+            ]),
+            const SizedBox(height: 8),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+              child: Column(children: [
+                Text('NEXT IQAMAH IN',
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 2)),
+                const SizedBox(height: 2),
+                Text(shared.getCountdown(),
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+              ]),
+            ),
+          ]),
         ],
       ),
     );
   }
 
-  Widget _liveClock() {
+  Widget _buildClock() {
     final timeStr = _formatTime(_now);
     final sp = timeStr.split(' ');
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(
-          sp[0],
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 46,
-            fontWeight: FontWeight.w200,
-            letterSpacing: -1,
-          ),
-        ),
+        Text(sp[0],
+          style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, letterSpacing: -1)),
         Padding(
-          padding: const EdgeInsets.only(bottom: 8, left: 4),
-          child: Text(
-            sp.length > 1 ? sp[1] : '',
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
+          padding: const EdgeInsets.only(bottom: 6, left: 4),
+          child: Text(sp.length > 1 ? sp[1] : '',
+            style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w500)),
         ),
+      ],
+    );
+  }
+
+  Widget _buildPrayerBar() {
+    final shared = SharedData.instance;
+    if (shared.prayers.isEmpty) return const SizedBox();
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.15)),
+      ),
+      child: Row(
+        children: [
+          _prayerBarHeader(),
+          const SizedBox(width: 16),
+          ...shared.prayers.map((p) => Expanded(child: _prayerBarItem(p))),
+          if (shared.jummah.isNotEmpty) ...[
+            Container(width: 1, height: 44, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 10)),
+            _jumuahBarItem(shared.jummah),
+          ],
+          const SizedBox(width: 12),
+          Icon(Icons.mosque, size: 24, color: Colors.white.withOpacity(0.3)),
+        ],
+      ),
+    );
+  }
+
+  Widget _prayerBarHeader() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const SizedBox(height: 16),
+        Text('STARTS', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        const SizedBox(height: 4),
+        Text('IQAMAH', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1)),
+      ],
+    );
+  }
+
+  Widget _prayerBarItem(Map<String, String> p) {
+    return Column(
+      children: [
+        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        const SizedBox(height: 4),
+        _subscriptTime(p['adhan']!, 15, FontWeight.w700),
+        const SizedBox(height: 2),
+        _subscriptTime(p['iqamah']!, 15, FontWeight.w700, opacity: 0.7),
+      ],
+    );
+  }
+
+  Widget _jumuahBarItem(String time) {
+    return Column(
+      children: [
+        const Text("JUMU'AH", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        const SizedBox(height: 4),
+        _subscriptTime(time, 15, FontWeight.w700),
       ],
     );
   }
 
   Widget _sunInfo(String icon, String label, String time) {
-    return Column(
+    return Column(children: [
+      Text(icon, style: const TextStyle(fontSize: 18)),
+      const SizedBox(height: 4),
+      Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+      const SizedBox(height: 2),
+      _subscriptTime(time, 13, FontWeight.w500),
+    ]);
+  }
+
+  Widget _subscriptTime(String time, double fontSize, FontWeight weight, {double opacity = 1.0}) {
+    final sp = time.split(' ');
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text(icon, style: const TextStyle(fontSize: 20)),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
-            letterSpacing: 1.5,
+        Text(sp[0], style: TextStyle(color: Colors.white.withOpacity(opacity), fontSize: fontSize, fontWeight: weight)),
+        if (sp.length > 1)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 1, left: 2),
+            child: Text(sp[1], style: TextStyle(color: Colors.white70.withOpacity(opacity), fontSize: fontSize * 0.55, fontWeight: FontWeight.w500)),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          time,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
       ],
     );
-  }
-}
-
-class _CircularProgressPainter extends CustomPainter {
-  final double progress;
-
-  _CircularProgressPainter({required this.progress});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-
-    // Background circle (light gray on white)
-    final bgPaint = Paint()
-      ..color = Colors.grey[300]!
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8;
-    canvas.drawCircle(center, radius - 4, bgPaint);
-
-    // Progress arc
-    final progressPaint = Paint()
-      ..color = const Color(0xFFDC2626)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 8
-      ..strokeCap = StrokeCap.round;
-
-    canvas.drawArc(
-      Rect.fromCircle(center: center, radius: radius - 4),
-      -math.pi / 2,
-      2 * math.pi * progress,
-      false,
-      progressPaint,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_CircularProgressPainter oldDelegate) {
-    return oldDelegate.progress != progress;
   }
 }
