@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/verse_service.dart';
+import '../services/daily_content_service.dart';
 import 'content_screen.dart';
 
 class VerseScreen extends StatelessWidget {
@@ -9,7 +9,10 @@ class VerseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ContentScreen(
       title: 'VERSE OF THE DAY',
-      fetchContent: () => VerseService().getTodaysVerse(),
+      fetchContent: () => DailyContentService(
+        tableName: 'verses',
+        fallback: {'text': 'Indeed, with hardship [will be] ease.', 'source': 'Quran 94:6'},
+      ).getTodaysContent(),
     );
   }
 }

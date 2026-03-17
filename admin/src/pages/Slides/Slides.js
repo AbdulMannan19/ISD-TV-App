@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../supabase';
 import './Slides.css';
 
-const MAX_SIZE = 2 * 1024 * 1024;
+const MAX_SIZE = 50 * 1024 * 1024;
 
 const PlusIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
@@ -65,7 +65,7 @@ export default function Slides() {
     const file = e.target.files[0];
     if (!file) return;
     if (!['image/png', 'image/jpeg'].includes(file.type)) { alert('Only PNG and JPEG allowed.'); return; }
-    if (file.size > MAX_SIZE) { alert('Max 2MB per image.'); return; }
+    if (file.size > MAX_SIZE) { alert('Max 50MB per image.'); return; }
     setPreviewUrl(URL.createObjectURL(file));
     setPreviewFile(file);
   };
@@ -155,7 +155,7 @@ export default function Slides() {
               <span>Upload Slide</span>
               <button className="modal-close" onClick={closeModal}>✕</button>
             </div>
-            <div className="slides-note">PNG or JPEG, 1920×1080px (Full HD), max 2MB.</div>
+            <div className="slides-note">PNG or JPEG, 1920×1080px (Full HD), max 50MB.</div>
             <input type="file" accept="image/png,image/jpeg" ref={uploadRef} onChange={handleFileSelect} style={{ display: 'none' }} />
             {previewUrl ? (
               <div className="upload-preview">

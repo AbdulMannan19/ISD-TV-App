@@ -46,10 +46,14 @@ class SharedData {
           .from('prayer_times')
           .select('prayer, iqamah');
       final now = DateTime.now();
+      final isFriday = now.weekday == DateTime.friday;
       final times = <DateTime>[];
       for (final row in response as List) {
         final prayer = row['prayer'] as String;
-        if (prayer.startsWith('jummah')) continue;
+        // On Friday: skip dhuhr, include jummah
+        // Other days: skip jummah, include dhuhr
+        if (isFriday && prayer == 'zuhr') continue;
+        if (!isFriday && prayer.startsWith('jummah')) continue;
         final dt = _parseTime(row['iqamah'] as String, now);
         if (dt != null) times.add(dt);
       }

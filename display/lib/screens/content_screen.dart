@@ -4,9 +4,15 @@ import '../services/shared_data.dart';
 
 class ContentScreen extends StatefulWidget {
   final String title;
-  final Future<Map<String, String>> Function() fetchContent;
+  final Future<Map<String, String>> Function()? fetchContent;
+  final Widget Function(BuildContext context)? customContent;
 
-  const ContentScreen({super.key, required this.title, required this.fetchContent});
+  const ContentScreen({
+    super.key,
+    required this.title,
+    this.fetchContent,
+    this.customContent,
+  });
 
   @override
   State<ContentScreen> createState() => _ContentScreenState();
@@ -25,7 +31,11 @@ class _ContentScreenState extends State<ContentScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _now = DateTime.now());
     });
-    _loadContent();
+    if (widget.fetchContent != null) {
+      _loadContent();
+    } else {
+      isLoading = false;
+    }
   }
 
   @override
@@ -35,7 +45,7 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   Future<void> _loadContent() async {
-    final data = await widget.fetchContent();
+    final data = await widget.fetchContent!();
     if (mounted) setState(() { content = data; isLoading = false; });
   }
 
@@ -60,7 +70,7 @@ class _ContentScreenState extends State<ContentScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading || content == null) {
+    if (isLoading) {
       return const Scaffold(
         backgroundColor: Color(0xFF000428),
         body: Center(child: CircularProgressIndicator(color: Colors.white)),
@@ -85,7 +95,9 @@ class _ContentScreenState extends State<ContentScreen> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Expanded(flex: 7, child: _buildContent()),
+                      Expanded(flex: 7, child: widget.customContent != null
+                          ? widget.customContent!(context)
+                          : _buildDefaultContent()),
                       const SizedBox(width: 20),
                       Expanded(flex: 3, child: _buildInfoPanel()),
                     ],
@@ -101,7 +113,7 @@ class _ContentScreenState extends State<ContentScreen> {
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildDefaultContent() {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.95),

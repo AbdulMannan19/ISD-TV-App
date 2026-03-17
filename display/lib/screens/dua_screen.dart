@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/dua_service.dart';
+import '../services/daily_content_service.dart';
 import 'content_screen.dart';
 
 class DuaScreen extends StatelessWidget {
@@ -9,7 +9,10 @@ class DuaScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return ContentScreen(
       title: 'DUA OF THE DAY',
-      fetchContent: () => DuaService().getTodaysDua(),
+      fetchContent: () => DailyContentService(
+        tableName: 'duas',
+        fallback: {'text': 'Our Lord, give us in this world [that which is] good and in the Hereafter [that which is] good and protect us from the punishment of the Fire.', 'source': 'Quran 2:201'},
+      ).getTodaysContent(),
     );
   }
 }

@@ -1,20 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../services/shared_data.dart';
+import 'content_screen.dart';
 
 class ProhibitedTimeScreen extends StatefulWidget {
   final DateTime endTime;
-  final List<Map<String, String>> prayers;
-  final String sunrise;
-  final String sunset;
 
-  const ProhibitedTimeScreen({
-    super.key,
-    required this.endTime,
-    required this.prayers,
-    required this.sunrise,
-    required this.sunset,
-  });
+  const ProhibitedTimeScreen({super.key, required this.endTime});
 
   @override
   State<ProhibitedTimeScreen> createState() => _ProhibitedTimeScreenState();
@@ -22,25 +13,19 @@ class ProhibitedTimeScreen extends StatefulWidget {
 
 class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
   late Timer _timer;
-  late DateTime _now;
   int _remainingMinutes = 0;
 
   @override
   void initState() {
     super.initState();
-    _now = DateTime.now();
     _updateRemainingTime();
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
-      setState(() {
-        _now = DateTime.now();
-        _updateRemainingTime();
-      });
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      setState(() => _updateRemainingTime());
     });
   }
 
   void _updateRemainingTime() {
-    final diff = widget.endTime.difference(_now);
-    _remainingMinutes = diff.inMinutes.clamp(0, 15);
+    _remainingMinutes = widget.endTime.difference(DateTime.now()).inMinutes.clamp(0, 15);
   }
 
   @override
@@ -49,55 +34,16 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
     super.dispose();
   }
 
-  String _formatTime(DateTime dt) {
-    final hour = dt.hour > 12 ? dt.hour - 12 : (dt.hour == 0 ? 12 : dt.hour);
-    final minute = dt.minute.toString().padLeft(2, '0');
-    final period = dt.hour >= 12 ? 'PM' : 'AM';
-    return '$hour:$minute $period';
-  }
-
-  String _formatDate(DateTime dt) {
-    const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF000428), Color(0xFF004E92), Color(0xFF001F54)],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              children: [
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(flex: 7, child: _buildContent()),
-                      const SizedBox(width: 20),
-                      Expanded(flex: 3, child: _buildInfoPanel()),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                _buildPrayerBar(),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return ContentScreen(
+      title: 'PROHIBITED TIME FOR VOLUNTARY SALAH',
+      customContent: (_) => _buildProhibitedContent(),
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildProhibitedContent() {
+    const accent = Color(0xFFC48F2A);
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.95),
@@ -110,215 +56,52 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
         children: [
           Text('PROHIBITED TIME FOR VOLUNTARY SALAH',
             textAlign: TextAlign.center,
-            style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.8),
+            style: TextStyle(color: accent.withOpacity(0.8),
               fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 3)),
           const SizedBox(height: 24),
           Expanded(
             child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.timer_outlined, size: 48, color: const Color(0xFFC48F2A).withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  Text('$_remainingMinutes',
-                    style: const TextStyle(color: Color(0xFFC48F2A),
-                      fontSize: 72, fontWeight: FontWeight.w700, height: 1)),
-                  const SizedBox(height: 4),
-                  Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
-                    style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.6),
-                      fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 2)),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Text(
-                      '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(color: const Color(0xFF1a1a2e).withOpacity(0.55),
-                        fontSize: 15, fontStyle: FontStyle.italic, height: 1.6)),
-                  ),
-                  const SizedBox(height: 8),
-                  Text('— Sahih Muslim, 831',
-                    style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.6),
-                      fontSize: 13, fontWeight: FontWeight.w600)),
-                ],
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('$_remainingMinutes',
+                      style: const TextStyle(color: accent,
+                        fontSize: 72, fontWeight: FontWeight.w700, height: 1)),
+                    const SizedBox(height: 4),
+                    Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
+                      style: TextStyle(color: accent.withOpacity(0.6),
+                        fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 2)),
+                    const SizedBox(height: 20),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Text(
+                        '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(color: const Color(0xFF1a1a2e).withOpacity(0.55),
+                          fontSize: 15, fontStyle: FontStyle.italic, height: 1.6)),
+                    ),
+                    const SizedBox(height: 8),
+                    Text('— Sahih Muslim, 831',
+                      style: TextStyle(color: accent.withOpacity(0.6),
+                        fontSize: 13, fontWeight: FontWeight.w600)),
+                  ],
+                ),
               ),
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFFC48F2A).withOpacity(0.08),
+              color: accent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8)),
             child: Text('Fard prayers can still be prayed',
               textAlign: TextAlign.center,
-              style: TextStyle(color: const Color(0xFFC48F2A).withOpacity(0.7),
+              style: TextStyle(color: accent.withOpacity(0.7),
                 fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildInfoPanel() {
-    final shared = SharedData.instance;
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Column(children: [
-            Container(
-              width: 80, height: 80,
-              decoration: const BoxDecoration(color: Colors.white),
-              child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.qr_code_2, size: 50, color: Colors.black54))),
-            ),
-            const SizedBox(height: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(border: Border.all(color: Colors.white38), borderRadius: BorderRadius.circular(8)),
-              child: const Text('Islamic Society of Denton', textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600)),
-            ),
-            const SizedBox(height: 4),
-            Text(_formatDate(_now), textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 10, letterSpacing: 0.5)),
-            if (shared.hijriDate.isNotEmpty)
-              Text(shared.hijriDate, textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 0.5)),
-          ]),
-          Column(children: [
-            _buildClock(),
-            const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              _sunInfo('☀️', 'SUNRISE', shared.sunrise),
-              _sunInfo('🌅', 'SUNSET', shared.sunset),
-            ]),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-              child: Column(children: [
-                Text('NEXT IQAMAH IN',
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 2)),
-                const SizedBox(height: 2),
-                Text(shared.getCountdown(),
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
-              ]),
-            ),
-          ]),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildClock() {
-    final timeStr = _formatTime(_now);
-    final sp = timeStr.split(' ');
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(sp[0],
-          style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, letterSpacing: -1)),
-        Padding(
-          padding: const EdgeInsets.only(bottom: 6, left: 4),
-          child: Text(sp.length > 1 ? sp[1] : '',
-            style: const TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.w500)),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPrayerBar() {
-    final shared = SharedData.instance;
-    if (shared.prayers.isEmpty) return const SizedBox();
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.15)),
-      ),
-      child: Row(
-        children: [
-          _prayerBarHeader(),
-          const SizedBox(width: 16),
-          ...shared.prayers.map((p) => Expanded(child: _prayerBarItem(p))),
-          if (shared.jummah.isNotEmpty) ...[
-            Container(width: 1, height: 44, color: Colors.white24, margin: const EdgeInsets.symmetric(horizontal: 10)),
-            _jumuahBarItem(shared.jummah),
-          ],
-          const SizedBox(width: 12),
-          Icon(Icons.mosque, size: 24, color: Colors.white.withOpacity(0.3)),
-        ],
-      ),
-    );
-  }
-
-  Widget _prayerBarHeader() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        const SizedBox(height: 16),
-        Text('STARTS', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1)),
-        const SizedBox(height: 4),
-        Text('IQAMAH', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w600, letterSpacing: 1)),
-      ],
-    );
-  }
-
-  Widget _prayerBarItem(Map<String, String> p) {
-    return Column(
-      children: [
-        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
-        const SizedBox(height: 4),
-        _subscriptTime(p['adhan']!, 15, FontWeight.w700),
-        const SizedBox(height: 2),
-        _subscriptTime(p['iqamah']!, 15, FontWeight.w700, opacity: 0.7),
-      ],
-    );
-  }
-
-  Widget _jumuahBarItem(String time) {
-    return Column(
-      children: [
-        const Text("JUMU'AH", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1)),
-        const SizedBox(height: 4),
-        _subscriptTime(time, 15, FontWeight.w700),
-      ],
-    );
-  }
-
-  Widget _sunInfo(String icon, String label, String time) {
-    return Column(children: [
-      Text(icon, style: const TextStyle(fontSize: 18)),
-      const SizedBox(height: 4),
-      Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 2),
-      _subscriptTime(time, 13, FontWeight.w500),
-    ]);
-  }
-
-  Widget _subscriptTime(String time, double fontSize, FontWeight weight, {double opacity = 1.0}) {
-    final sp = time.split(' ');
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(sp[0], style: TextStyle(color: Colors.white.withOpacity(opacity), fontSize: fontSize, fontWeight: weight)),
-        if (sp.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 1, left: 2),
-            child: Text(sp[1], style: TextStyle(color: Colors.white70.withOpacity(opacity), fontSize: fontSize * 0.55, fontWeight: FontWeight.w500)),
-          ),
-      ],
     );
   }
 }
