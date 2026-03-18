@@ -4,15 +4,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'shared_data.dart';
 import 'prayer_times_service.dart';
 
-enum DisplayMode { normal, silence, prohibited }
+enum DisplayMode { normal, silence, prohibited, iqamahLock }
 
 class DisplayModeService {
   DisplayMode mode = DisplayMode.normal;
   DateTime? silenceEndTime;
   DateTime? prohibitedEndTime;
+  DateTime? iqamahLockEndTime;
 
   Timer? _silenceTimer;
   Timer? _prohibitedTimer;
+  Timer? _iqamahLockTimer;
   VoidCallback? _onModeChanged;
 
   List<String> _iqamahTimes = [];
@@ -65,64 +67,24 @@ class DisplayModeService {
     }
   }
 
-  /// Schedule the next silence screen. Calculates exact time until next iqamah,
-  /// fires once, shows silence for 15 min (or 45 for jumu'ah), then reschedules.
-  void scheduleSilence() {
+  /// Schedule silence exit. Called when silence mode is active.
+  /// Silence is entered by iqamahLock exit — not independently scheduled.
+  void _scheduleSilenceExit() {
     _silenceTimer?.cancel();
-    final now = DateTime.now();
-
-    // If currently in silence mode, schedule exit
-    if (mode == DisplayMode.silence && silenceEndTime != null) {
-      final remaining = silenceEndTime!.difference(now);
-      if (remaining.isNegative) {
-        mode = DisplayMode.normal;
-        silenceEndTime = null;
-        _onModeChanged?.call();
-        scheduleSilence();
-      } else {
-        _silenceTimer = Timer(remaining, () {
-          mode = DisplayMode.normal;
-          silenceEndTime = null;
-          _onModeChanged?.call();
-          scheduleSilence();
-        });
-      }
+    if (mode != DisplayMode.silence || silenceEndTime == null) return;
+    final remaining = silenceEndTime!.difference(DateTime.now());
+    if (remaining.isNegative) {
+      mode = DisplayMode.normal;
+      silenceEndTime = null;
+      _onModeChanged?.call();
+      scheduleIqamahLock();
       return;
     }
-
-    // Find next iqamah time
-    final upcoming = <DateTime>[];
-
-    for (final iqamah in _iqamahTimes) {
-      final dt = _parseTimeToday(iqamah);
-      if (dt != null && dt.isAfter(now)) upcoming.add(dt);
-    }
-
-    // Friday jumu'ah
-    if (now.weekday == DateTime.friday) {
-      final jummahTime = SharedData.instance.jummah;
-      if (jummahTime.isNotEmpty) {
-        final jDt = _parseTimeToday(jummahTime);
-        if (jDt != null && jDt.isAfter(now)) upcoming.add(jDt);
-      }
-    }
-
-    if (upcoming.isEmpty) return;
-    upcoming.sort();
-    final next = upcoming.first;
-    final delay = next.difference(now);
-
-    _silenceTimer = Timer(delay, () {
-      // Determine duration: 45 min for jumu'ah on Friday, 15 min otherwise
-      final isFridayJummah = now.weekday == DateTime.friday &&
-          SharedData.instance.jummah.isNotEmpty &&
-          _parseTimeToday(SharedData.instance.jummah) == next;
-      final duration = isFridayJummah ? 45 : 15;
-
-      mode = DisplayMode.silence;
-      silenceEndTime = DateTime.now().add(Duration(minutes: duration));
+    _silenceTimer = Timer(remaining, () {
+      mode = DisplayMode.normal;
+      silenceEndTime = null;
       _onModeChanged?.call();
-      scheduleSilence(); // This will now schedule the exit
+      scheduleIqamahLock();
     });
   }
 
@@ -203,11 +165,11 @@ class DisplayModeService {
     if (mode == DisplayMode.silence) {
       mode = DisplayMode.normal;
       silenceEndTime = null;
-      scheduleSilence();
+      scheduleIqamahLock();
     } else {
       mode = DisplayMode.silence;
       silenceEndTime = DateTime.now().add(const Duration(hours: 1));
-      scheduleSilence();
+      _scheduleSilenceExit();
     }
   }
 
@@ -224,17 +186,100 @@ class DisplayModeService {
     }
   }
 
+  /// Schedule iqamah lock: 5 min before each iqamah, lock to prayer times screen
+  /// until iqamah time. When lock ends, transitions directly into silence mode.
+  void scheduleIqamahLock() {
+    _iqamahLockTimer?.cancel();
+    final now = DateTime.now();
+
+    // If currently in iqamahLock mode, schedule exit → silence
+    if (mode == DisplayMode.iqamahLock && iqamahLockEndTime != null) {
+      final remaining = iqamahLockEndTime!.difference(now);
+      if (remaining.isNegative) {
+        _enterSilenceFromLock(iqamahLockEndTime!);
+        return;
+      }
+      _iqamahLockTimer = Timer(remaining, () {
+        _enterSilenceFromLock(iqamahLockEndTime!);
+      });
+      return;
+    }
+
+    // Build list of iqamah DateTimes for today
+    final iqamahDts = <DateTime>[];
+    for (final t in _iqamahTimes) {
+      final dt = _parseTimeToday(t);
+      if (dt != null) iqamahDts.add(dt);
+    }
+    // Friday jumu'ah
+    if (now.weekday == DateTime.friday) {
+      final jummahTime = SharedData.instance.jummah;
+      if (jummahTime.isNotEmpty) {
+        final jDt = _parseTimeToday(jummahTime);
+        if (jDt != null) iqamahDts.add(jDt);
+      }
+    }
+    if (iqamahDts.isEmpty) return;
+
+    // Find next lock start (5 min before iqamah) that's in the future
+    final upcoming = <List<DateTime>>[]; // [lockStart, iqamahTime]
+    for (final iq in iqamahDts) {
+      final lockStart = iq.subtract(const Duration(minutes: 5));
+      // Check if we're currently inside a lock window
+      if (now.isAfter(lockStart) && now.isBefore(iq)) {
+        mode = DisplayMode.iqamahLock;
+        iqamahLockEndTime = iq;
+        _onModeChanged?.call();
+        scheduleIqamahLock(); // Schedule exit → silence
+        return;
+      }
+      if (lockStart.isAfter(now)) {
+        upcoming.add([lockStart, iq]);
+      }
+    }
+
+    if (upcoming.isEmpty) return;
+    upcoming.sort((a, b) => a[0].compareTo(b[0]));
+    final next = upcoming.first;
+    final delay = next[0].difference(now);
+
+    _iqamahLockTimer = Timer(delay, () {
+      mode = DisplayMode.iqamahLock;
+      iqamahLockEndTime = next[1];
+      _onModeChanged?.call();
+      scheduleIqamahLock(); // Schedule exit → silence
+    });
+  }
+
+  /// Transition from iqamahLock into silence mode.
+  /// 45 min for jumu'ah on Friday, 15 min otherwise.
+  void _enterSilenceFromLock(DateTime iqamahTime) {
+    iqamahLockEndTime = null;
+    final isFridayJummah = DateTime.now().weekday == DateTime.friday &&
+        SharedData.instance.jummah.isNotEmpty &&
+        _parseTimeToday(SharedData.instance.jummah) == iqamahTime;
+    final duration = isFridayJummah ? 45 : 15;
+
+    mode = DisplayMode.silence;
+    silenceEndTime = DateTime.now().add(Duration(minutes: duration));
+    _onModeChanged?.call();
+    _scheduleSilenceExit();
+  }
+
   void exitSpecialMode() {
     mode = DisplayMode.normal;
     silenceEndTime = null;
     prohibitedEndTime = null;
-    scheduleSilence();
+    iqamahLockEndTime = null;
+    _silenceTimer?.cancel();
     scheduleProhibited();
+    scheduleIqamahLock();
   }
 
   void dispose() {
     _silenceTimer?.cancel();
     _prohibitedTimer?.cancel();
+    _iqamahLockTimer?.cancel();
   }
 
   DateTime? _parseTimeToday(String time) {

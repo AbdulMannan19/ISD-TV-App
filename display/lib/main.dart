@@ -15,6 +15,7 @@ import 'services/slides_service.dart';
 import 'services/update_service.dart';
 import 'services/shared_data.dart';
 import 'services/display_mode_service.dart';
+import 'services/alert_service.dart';
 import 'test/test_controls.dart';
 
 Future<void> main() async {
@@ -70,6 +71,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   bool _screensBuilt = false;
 
   final _displayMode = DisplayModeService();
+  List<String> _alerts = [];
+  StreamSubscription? _alertSubscription;
 
   Timer? _rotationTimer;
   Timer? _midnightTimer;
@@ -82,6 +85,13 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _buildScreens();
     _listenToSlideChanges();
 
+    // Init alerts
+    AlertService.instance.init();
+    _alerts = AlertService.instance.currentAlerts;
+    _alertSubscription = AlertService.instance.alertStream.listen((alerts) {
+      if (mounted) setState(() => _alerts = alerts);
+    });
+
     _displayMode.setOnModeChanged(() {
       if (mounted) setState(() {});
     });
@@ -89,13 +99,14 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     // Fetch data then schedule smart timers
     _displayMode.fetchPrayerData().then((_) {
       _displayMode.fetchIqamahTimes().then((_) {
-        _displayMode.scheduleSilence();
         _displayMode.scheduleProhibited();
+        _displayMode.scheduleIqamahLock();
       });
     });
 
     _rotationTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted && _screensBuilt && _displayMode.mode == DisplayMode.normal) {
+      if (mounted && _screensBuilt &&
+          _displayMode.mode == DisplayMode.normal) {
         setState(() => _currentIndex = (_currentIndex + 1) % _screens.length);
       }
     });
@@ -129,15 +140,15 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _prayerRefreshTimer = Timer(next.difference(now), () {
       _displayMode.fetchPrayerData().then((_) {
         _displayMode.fetchIqamahTimes().then((_) {
-          _displayMode.scheduleSilence();
           _displayMode.scheduleProhibited();
+          _displayMode.scheduleIqamahLock();
         });
       });
       _prayerRefreshTimer = Timer.periodic(const Duration(hours: 12), (_) {
         _displayMode.fetchPrayerData().then((_) {
           _displayMode.fetchIqamahTimes().then((_) {
-            _displayMode.scheduleSilence();
             _displayMode.scheduleProhibited();
+            _displayMode.scheduleIqamahLock();
           });
         });
       });
@@ -175,6 +186,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _midnightTimer?.cancel();
     _prayerRefreshTimer?.cancel();
     _slidesSubscription?.cancel();
+    _alertSubscription?.cancel();
+    AlertService.instance.dispose();
     _displayMode.dispose();
     super.dispose();
   }
@@ -188,13 +201,20 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       );
     }
 
+    // Show alert marquee on all screens except silence and slides
+    final showAlerts = _alerts.isNotEmpty &&
+        _displayMode.mode != DisplayMode.silence &&
+        !(_displayMode.mode == DisplayMode.normal && _currentIndex >= 4);
+
     return Stack(
       children: [
         switch (_displayMode.mode) {
           DisplayMode.silence => const SilenceScreen(),
           DisplayMode.prohibited => ProhibitedTimeScreen(endTime: _displayMode.prohibitedEndTime!),
+          DisplayMode.iqamahLock => IndexedStack(index: 0, children: _screens),
           DisplayMode.normal => IndexedStack(index: _currentIndex, children: _screens),
         },
+        if (showAlerts) _buildAlertMarquee(),
         TestControls(
           onPrevious: () {
             if (_screensBuilt && _displayMode.mode == DisplayMode.normal) {
@@ -211,6 +231,97 @@ class _ScreenRotatorState extends State<ScreenRotator> {
           onExit: () => setState(() => _displayMode.exitSpecialMode()),
         ),
       ],
+    );
+  }
+
+  Widget _buildAlertMarquee() {
+    final text = _alerts.join('     •     ');
+    return Positioned(
+      left: 0,
+      right: 0,
+      bottom: 0,
+      child: ClipRect(
+        child: _AlertMarquee(key: ValueKey(text), text: text),
+      ),
+    );
+  }
+}
+
+class _AlertMarquee extends StatefulWidget {
+  final String text;
+  const _AlertMarquee({super.key, required this.text});
+
+  @override
+  State<_AlertMarquee> createState() => _AlertMarqueeState();
+}
+
+class _AlertMarqueeState extends State<_AlertMarquee>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  double _childWidth = 0;
+  double _screenWidth = 0;
+  final _childKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(vsync: this);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _measure());
+  }
+
+  void _measure() {
+    if (!mounted) return;
+    _screenWidth = MediaQuery.of(context).size.width;
+    final renderBox = _childKey.currentContext?.findRenderObject() as RenderBox?;
+    if (renderBox != null) {
+      _childWidth = renderBox.size.width;
+    }
+    final totalDistance = _screenWidth + _childWidth;
+    final durationMs = (totalDistance / 100 * 1000).toInt();
+    _controller.duration = Duration(milliseconds: durationMs);
+    _controller.repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, child) {
+        final totalDistance = _screenWidth + _childWidth;
+        final dx = _screenWidth - _controller.value * totalDistance;
+        return Transform.translate(
+          offset: Offset(dx, 0),
+          child: child,
+        );
+      },
+      child: UnconstrainedBox(
+        alignment: Alignment.centerLeft,
+        child: Container(
+          key: _childKey,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.red.shade800,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            widget.text,
+            maxLines: 1,
+            softWrap: false,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

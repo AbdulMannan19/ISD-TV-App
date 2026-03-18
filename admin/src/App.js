@@ -8,6 +8,7 @@ import UpdatePassword from './pages/UpdatePassword/UpdatePassword';
 import Slides from './pages/Slides/Slides';
 import PrayerTimes from './pages/PrayerTimes/PrayerTimes';
 import Profile from './pages/Profile/Profile';
+import Alerts from './pages/Alerts/Alerts';
 import './App.css';
 
 function AppContent() {
@@ -54,6 +55,7 @@ function AppContent() {
         <Routes>
           <Route path="/slides" element={<Slides />} />
           <Route path="/prayer-times" element={<PrayerTimes />} />
+          <Route path="/alerts" element={<Alerts />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Navigate to="/prayer-times" />} />
         </Routes>

@@ -1,0 +1,91 @@
+.alerts-form {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.alerts-input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+.alerts-input:focus {
+  outline: none;
+  border-color: var(--green);
+}
+
+.alerts-info {
+  background: var(--green-bg);
+  border: 1px solid var(--green-border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: var(--green);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alerts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.alert-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s;
+}
+.alert-card:hover {
+  border-color: var(--green-border);
+}
+
+.alert-text {
+  font-size: 0.95rem;
+  color: var(--text);
+  flex: 1;
+}
+
+.alert-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-left: 16px;
+  white-space: nowrap;
+}
+
+.alert-delete {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--danger);
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  margin-left: 12px;
+  transition: background 0.15s;
+  flex-shrink: 0;
+}
+.alert-delete:hover {
+  background: #b91c1c;
+}
+
+.alerts-empty {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
