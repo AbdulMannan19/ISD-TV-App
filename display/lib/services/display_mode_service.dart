@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'dart:ui';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'shared_data.dart';
-import 'prayer_times_service.dart';
 
 enum DisplayMode { normal, silence, prohibited, iqamahLock }
 
@@ -17,58 +15,17 @@ class DisplayModeService {
   Timer? _iqamahLockTimer;
   VoidCallback? _onModeChanged;
 
-  List<String> _iqamahTimes = [];
-  String _sunriseTime = '';
-  String _sunsetTime = '';
-  List<Map<String, String>> _prayersList = [];
-
-  String get sunriseTime => _sunriseTime;
-  String get sunsetTime => _sunsetTime;
-  List<Map<String, String>> get prayersList => _prayersList;
-
   void setOnModeChanged(VoidCallback callback) {
     _onModeChanged = callback;
   }
 
-  Future<void> fetchPrayerData() async {
-    try {
-      final data = await PrayerTimesService().fetchPrayerTimes();
-      if (data == null) return;
-      _prayersList = (data['prayers'] as List).map((p) => {
-        'name': p['name'] as String,
-        'start': p['adhan'] as String,
-        'iqamah': p['iqamah'] as String,
-      }).toList();
-      _sunriseTime = data['sunrise'] as String;
-      _sunsetTime = data['sunset'] as String;
-    } catch (e) {
-      print('Error fetching prayer data: $e');
-    }
-  }
-
-  Future<void> fetchIqamahTimes() async {
-    try {
-      final response = await Supabase.instance.client
-          .from('prayer_times')
-          .select('prayer, iqamah');
-      final now = DateTime.now();
-      final isFriday = now.weekday == DateTime.friday;
-      final times = <String>[];
-      for (final row in response as List) {
-        final prayer = row['prayer'] as String;
-        if (isFriday && prayer == 'zuhr') continue;
-        if (prayer.startsWith('jummah')) continue;
-        times.add(row['iqamah'] as String);
-      }
-      _iqamahTimes = times;
-      await SharedData.instance.refreshIqamah();
-    } catch (e) {
-      print('Error fetching iqamah times: $e');
-    }
+  /// Refresh iqamah times from DB only (no API call).
+  /// Then reschedule iqamah lock with updated times.
+  Future<void> refreshIqamahFromDb() async {
+    await SharedData.instance.refreshIqamah();
   }
 
   /// Schedule silence exit. Called when silence mode is active.
-  /// Silence is entered by iqamahLock exit — not independently scheduled.
   void _scheduleSilenceExit() {
     _silenceTimer?.cancel();
     if (mode != DisplayMode.silence || silenceEndTime == null) return;
@@ -88,11 +45,11 @@ class DisplayModeService {
     });
   }
 
-  /// Schedule the next prohibited time screen. Calculates exact time until
-  /// next prohibited window, fires once, shows for duration, then reschedules.
+  /// Schedule the next prohibited time screen.
   void scheduleProhibited() {
     _prohibitedTimer?.cancel();
     final now = DateTime.now();
+    final shared = SharedData.instance;
 
     // If currently in prohibited mode, schedule exit
     if (mode == DisplayMode.prohibited && prohibitedEndTime != null) {
@@ -113,10 +70,10 @@ class DisplayModeService {
       return;
     }
 
-    // Build list of prohibited windows: (start, end)
+    // Build prohibited windows from SharedData
     final windows = <List<DateTime>>[];
-    final sunriseDt = _parseTimeToday(_sunriseTime);
-    final sunsetDt = _parseTimeToday(_sunsetTime);
+    final sunriseDt = _parseTimeToday(shared.sunrise);
+    final sunsetDt = _parseTimeToday(shared.sunset);
 
     if (sunriseDt != null) {
       windows.add([sunriseDt, sunriseDt.add(const Duration(minutes: 15))]);
@@ -125,38 +82,36 @@ class DisplayModeService {
       windows.add([sunsetDt.subtract(const Duration(minutes: 15)), sunsetDt]);
     }
 
-    final dhuhrStart = _prayersList
+    final dhuhrStart = shared.prayers
         .where((p) => p['name'] == 'DHUHR')
-        .map((p) => _parseTimeToday(p['start']!))
+        .map((p) => _parseTimeToday(p['adhan']!))
         .firstOrNull;
     if (dhuhrStart != null) {
       windows.add([dhuhrStart.subtract(const Duration(minutes: 15)), dhuhrStart]);
     }
 
-    // Check if we're currently inside a window
+    // Check if currently inside a window
     for (final w in windows) {
       if (now.isAfter(w[0]) && now.isBefore(w[1])) {
         mode = DisplayMode.prohibited;
         prohibitedEndTime = w[1];
         _onModeChanged?.call();
-        scheduleProhibited(); // Schedule exit
+        scheduleProhibited();
         return;
       }
     }
 
-    // Find next upcoming window start
+    // Find next upcoming window
     final futureStarts = windows.where((w) => w[0].isAfter(now)).toList();
     if (futureStarts.isEmpty) return;
     futureStarts.sort((a, b) => a[0].compareTo(b[0]));
 
     final nextWindow = futureStarts.first;
-    final delay = nextWindow[0].difference(now);
-
-    _prohibitedTimer = Timer(delay, () {
+    _prohibitedTimer = Timer(nextWindow[0].difference(now), () {
       mode = DisplayMode.prohibited;
       prohibitedEndTime = nextWindow[1];
       _onModeChanged?.call();
-      scheduleProhibited(); // Schedule exit
+      scheduleProhibited();
     });
   }
 
@@ -186,11 +141,12 @@ class DisplayModeService {
     }
   }
 
-  /// Schedule iqamah lock: 5 min before each iqamah, lock to prayer times screen
-  /// until iqamah time. When lock ends, transitions directly into silence mode.
+  /// Schedule iqamah lock: 5 min before each iqamah, lock to prayer times screen.
+  /// When lock ends, transitions into silence mode.
   void scheduleIqamahLock() {
     _iqamahLockTimer?.cancel();
     final now = DateTime.now();
+    final shared = SharedData.instance;
 
     // If currently in iqamahLock mode, schedule exit → silence
     if (mode == DisplayMode.iqamahLock && iqamahLockEndTime != null) {
@@ -205,32 +161,28 @@ class DisplayModeService {
       return;
     }
 
-    // Build list of iqamah DateTimes for today
+    // Build iqamah DateTimes from SharedData's iqamah list
     final iqamahDts = <DateTime>[];
-    for (final t in _iqamahTimes) {
-      final dt = _parseTimeToday(t);
+    for (final p in shared.prayers) {
+      final dt = _parseTimeToday(p['iqamah']!);
       if (dt != null) iqamahDts.add(dt);
     }
     // Friday jumu'ah
-    if (now.weekday == DateTime.friday) {
-      final jummahTime = SharedData.instance.jummah;
-      if (jummahTime.isNotEmpty) {
-        final jDt = _parseTimeToday(jummahTime);
-        if (jDt != null) iqamahDts.add(jDt);
-      }
+    if (now.weekday == DateTime.friday && shared.jummah.isNotEmpty) {
+      final jDt = _parseTimeToday(shared.jummah);
+      if (jDt != null) iqamahDts.add(jDt);
     }
     if (iqamahDts.isEmpty) return;
 
-    // Find next lock start (5 min before iqamah) that's in the future
-    final upcoming = <List<DateTime>>[]; // [lockStart, iqamahTime]
+    // Find next lock window
+    final upcoming = <List<DateTime>>[];
     for (final iq in iqamahDts) {
       final lockStart = iq.subtract(const Duration(minutes: 5));
-      // Check if we're currently inside a lock window
       if (now.isAfter(lockStart) && now.isBefore(iq)) {
         mode = DisplayMode.iqamahLock;
         iqamahLockEndTime = iq;
         _onModeChanged?.call();
-        scheduleIqamahLock(); // Schedule exit → silence
+        scheduleIqamahLock();
         return;
       }
       if (lockStart.isAfter(now)) {
@@ -241,18 +193,15 @@ class DisplayModeService {
     if (upcoming.isEmpty) return;
     upcoming.sort((a, b) => a[0].compareTo(b[0]));
     final next = upcoming.first;
-    final delay = next[0].difference(now);
 
-    _iqamahLockTimer = Timer(delay, () {
+    _iqamahLockTimer = Timer(next[0].difference(now), () {
       mode = DisplayMode.iqamahLock;
       iqamahLockEndTime = next[1];
       _onModeChanged?.call();
-      scheduleIqamahLock(); // Schedule exit → silence
+      scheduleIqamahLock();
     });
   }
 
-  /// Transition from iqamahLock into silence mode.
-  /// 45 min for jumu'ah on Friday, 15 min otherwise.
   void _enterSilenceFromLock(DateTime iqamahTime) {
     iqamahLockEndTime = null;
     final isFridayJummah = DateTime.now().weekday == DateTime.friday &&
@@ -284,15 +233,20 @@ class DisplayModeService {
 
   DateTime? _parseTimeToday(String time) {
     try {
-      final parts = time.split(' ');
-      if (parts.length != 2) return null;
-      final timeParts = parts[0].split(':');
-      var hour = int.parse(timeParts[0]);
-      final minute = int.parse(timeParts[1]);
-      if (parts[1] == 'PM' && hour != 12) hour += 12;
-      if (parts[1] == 'AM' && hour == 12) hour = 0;
+      final trimmed = time.trim();
       final now = DateTime.now();
-      return DateTime(now.year, now.month, now.day, hour, minute);
+      if (trimmed.contains('AM') || trimmed.contains('PM')) {
+        final parts = trimmed.split(' ');
+        final tp = parts[0].split(':');
+        var hour = int.parse(tp[0]);
+        final minute = int.parse(tp[1]);
+        if (parts[1] == 'PM' && hour != 12) hour += 12;
+        if (parts[1] == 'AM' && hour == 12) hour = 0;
+        return DateTime(now.year, now.month, now.day, hour, minute);
+      }
+      final parts = trimmed.split(':');
+      return DateTime(now.year, now.month, now.day,
+          int.parse(parts[0]), int.parse(parts[1]));
     } catch (_) {
       return null;
     }

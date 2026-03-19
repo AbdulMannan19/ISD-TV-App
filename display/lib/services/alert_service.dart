@@ -11,7 +11,6 @@ class AlertService {
   List<String> get currentAlerts => _currentAlerts;
 
   StreamSubscription? _subscription;
-  Timer? _refreshTimer;
 
   void init() {
     _fetchAlerts();
@@ -20,9 +19,6 @@ class AlertService {
         .from('alerts')
         .stream(primaryKey: ['id'])
         .listen((_) => _fetchAlerts());
-
-    // Re-check every 15 min for alerts entering/leaving their window
-    _refreshTimer = Timer.periodic(const Duration(minutes: 15), (_) => _fetchAlerts());
   }
 
   Future<void> _fetchAlerts() async {
@@ -45,7 +41,6 @@ class AlertService {
 
   void dispose() {
     _subscription?.cancel();
-    _refreshTimer?.cancel();
     _controller.close();
   }
 }

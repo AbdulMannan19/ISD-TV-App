@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/prayer_times_service.dart';
 import '../services/shared_data.dart';
 import 'settings_screen.dart';
 
@@ -15,14 +14,7 @@ class PrayerTimesScreen extends StatefulWidget {
 class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
   late Timer _timer;
   late DateTime _now;
-  final PrayerTimesService _prayerService = PrayerTimesService();
   StreamSubscription? _iqamahSubscription;
-
-  List<Map<String, String>> prayers = [];
-  String sunrise = '';
-  String sunset = '';
-  String jummah = '1:45 PM';
-  bool isLoading = true;
 
   @override
   void initState() {
@@ -31,7 +23,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     _timer = Timer.periodic(const Duration(seconds: 1), (_) {
       setState(() => _now = DateTime.now());
     });
-    _loadPrayerTimes();
     _listenToIqamahChanges();
   }
 
@@ -40,44 +31,10 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         .from('prayer_times')
         .stream(primaryKey: ['prayer'])
         .listen((_) {
-          if (mounted) _refreshIqamah();
+          // SharedData.refreshIqamah() is called from main.dart's debounced listener
+          // Just rebuild the UI here
+          if (mounted) setState(() {});
         });
-  }
-
-  Future<void> _refreshIqamah() async {
-    final iqamah = await _prayerService.fetchIqamahOnly();
-    if (iqamah.isEmpty || !mounted) return;
-
-    final nameToKey = {'FAJR': 'fajr', 'DHUHR': 'zuhr', 'ASR': 'asr', 'MAGHRIB': 'maghrib', 'ISHA': 'isha'};
-    setState(() {
-      prayers = prayers.map((p) {
-        final key = nameToKey[p['name']];
-        final newIqamah = key != null ? iqamah[key] : null;
-        return {
-          'name': p['name']!,
-          'start': p['start']!,
-          'iqamah': newIqamah ?? p['iqamah']!,
-        };
-      }).toList();
-      if (iqamah.containsKey('jummah')) jummah = iqamah['jummah']!;
-    });
-  }
-
-  Future<void> _loadPrayerTimes() async {
-    final data = await _prayerService.fetchPrayerTimes();
-    if (data != null && mounted) {
-      setState(() {
-        prayers = (data['prayers'] as List).map((p) => {
-          'name': p['name'] as String,
-          'start': p['adhan'] as String,
-          'iqamah': p['iqamah'] as String,
-        }).toList();
-        sunrise = data['sunrise'] as String;
-        sunset = data['sunset'] as String;
-        jummah = data['jummah'] as String;
-        isLoading = false;
-      });
-    }
   }
 
   @override
@@ -102,7 +59,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
+    final shared = SharedData.instance;
+    if (shared.prayers.isEmpty) {
       return const Scaffold(
         backgroundColor: Color(0xFF000428),
         body: Center(
@@ -205,7 +163,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           const Divider(color: Colors.white24),
           const SizedBox(height: 4),
           // Each prayer row gets equal space
-          ...prayers.map((p) => Expanded(child: _prayerRow(p))),
+          ...SharedData.instance.prayers.map((p) => Expanded(child: _prayerRow(p))),
           const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
@@ -227,7 +185,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   ),
                 ),
                 const SizedBox(width: 20),
-                _subscriptTime(jummah, 28, FontWeight.w600),
+                _subscriptTime(SharedData.instance.jummah, 28, FontWeight.w600),
               ],
             ),
           ),
@@ -252,7 +210,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               ),
             ),
           ),
-          Expanded(flex: 3, child: _timeCell(p['start']!)),
+          Expanded(flex: 3, child: _timeCell(p['adhan']!)),
           Expanded(flex: 3, child: _timeCell(p['iqamah']!)),
         ],
       ),
@@ -378,8 +336,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _sunInfo('☀️', 'SUNRISE', sunrise),
-              _sunInfo('🌅', 'SUNSET', sunset),
+              _sunInfo('☀️', 'SUNRISE', SharedData.instance.sunrise),
+              _sunInfo('🌅', 'SUNSET', SharedData.instance.sunset),
             ],
           ),
           const SizedBox(height: 12),

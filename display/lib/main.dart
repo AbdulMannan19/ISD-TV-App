@@ -26,11 +26,10 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  // Pre-fetch daily content
-  // Init SharedData first (fetches hijri date from API)
+  // Single API call on startup — populates SharedData with everything
   await SharedData.instance.init();
 
-  // Pre-fetch daily content (uses hijri day-of-year)
+  // Pre-fetch daily content (uses hijri month/day from SharedData)
   await Future.wait([
     DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}).getTodaysContent(),
     DailyContentService(tableName: 'duas', fallback: {'text': '', 'source': ''}).getTodaysContent(),
@@ -71,7 +70,7 @@ class ScreenRotator extends StatefulWidget {
 class _ScreenRotatorState extends State<ScreenRotator> {
   int _currentIndex = 0;
   List<Widget> _screens = [];
-  List<int> _screenDurations = []; // seconds per screen
+  List<int> _screenDurations = [];
   bool _screensBuilt = false;
 
   final _displayMode = DisplayModeService();
@@ -80,7 +79,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
 
   Timer? _rotationTimer;
   Timer? _midnightTimer;
-  Timer? _prayerRefreshTimer;
+  Timer? _maghribRefreshTimer;
+  Timer? _prayerTimesDebounce;
   StreamSubscription? _slidesSubscription;
   StreamSubscription? _prayerTimesSubscription;
 
@@ -91,7 +91,6 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _listenToSlideChanges();
     _listenToPrayerTimesChanges();
 
-    // Init alerts
     AlertService.instance.init();
     _alerts = AlertService.instance.currentAlerts;
     _alertSubscription = AlertService.instance.alertStream.listen((alerts) {
@@ -102,31 +101,55 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       if (mounted) setState(() {});
     });
 
-    // Fetch data then schedule smart timers
-    _displayMode.fetchPrayerData().then((_) {
-      _displayMode.fetchIqamahTimes().then((_) {
-        _displayMode.scheduleProhibited();
-        _displayMode.scheduleIqamahLock();
-      });
-    });
+    // SharedData already populated from main() — just schedule timers
+    _displayMode.scheduleProhibited();
+    _displayMode.scheduleIqamahLock();
 
     _scheduleNextRotation();
-
     _scheduleMidnightRefresh();
-    _schedulePrayerRefresh();
+    _scheduleMaghribRefresh();
   }
 
+  // --- Midnight: refresh iqamah schedule + daily content cache ---
   void _scheduleMidnightRefresh() {
     final now = DateTime.now();
-    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
     _midnightTimer = Timer(nextMidnight.difference(now), () {
-      _refreshDailyContent();
-      _midnightTimer = Timer.periodic(const Duration(hours: 24), (_) => _refreshDailyContent());
+      _refreshAtMidnight();
+      _midnightTimer = Timer.periodic(const Duration(hours: 24), (_) => _refreshAtMidnight());
     });
   }
 
-  Future<void> _refreshDailyContent() async {
+  Future<void> _refreshAtMidnight() async {
     await IqamahScheduleService.applyScheduledChanges();
+    // Full API refresh — new Gregorian day means new prayer times
+    await SharedData.instance.init();
+    _displayMode.scheduleProhibited();
+    _displayMode.scheduleIqamahLock();
+    // Refresh hijri content
+    await _fetchDailyContent();
+    if (mounted) setState(() {});
+  }
+
+  // --- Maghrib+1min: refresh hijri content (Islamic day changes at sunset) ---
+  void _scheduleMaghribRefresh() {
+    final maghribDt = _parseTimeToday(SharedData.instance.sunset);
+    if (maghribDt == null) return;
+
+    final now = DateTime.now();
+    final refreshTime = maghribDt.add(const Duration(minutes: 1));
+
+    if (refreshTime.isBefore(now)) return; // Already past maghrib today
+
+    _maghribRefreshTimer = Timer(refreshTime.difference(now), () async {
+      // Re-fetch API to get tomorrow's hijri date
+      await SharedData.instance.init();
+      await _fetchDailyContent();
+      if (mounted) setState(() {});
+    });
+  }
+
+  Future<void> _fetchDailyContent() async {
     await Future.wait([
       DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}).getTodaysContent(),
       DailyContentService(tableName: 'duas', fallback: {'text': '', 'source': ''}).getTodaysContent(),
@@ -134,24 +157,20 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     ]);
   }
 
-  void _schedulePrayerRefresh() {
-    final now = DateTime.now();
-    final nextNoon = DateTime(now.year, now.month, now.day, 12);
-    final nextMidnight = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
-    final next = now.isBefore(nextNoon) ? nextNoon : nextMidnight;
-    _prayerRefreshTimer = Timer(next.difference(now), () {
-      _displayMode.fetchPrayerData().then((_) {
-        _displayMode.fetchIqamahTimes().then((_) {
-          _displayMode.scheduleProhibited();
+  // --- Realtime: iqamah changes from admin (DB only, no API) ---
+  void _listenToPrayerTimesChanges() {
+    _prayerTimesSubscription = Supabase.instance.client
+        .from('prayer_times')
+        .stream(primaryKey: ['id'])
+        .listen((_) {
+      if (!mounted) return;
+      _prayerTimesDebounce?.cancel();
+      _prayerTimesDebounce = Timer(const Duration(seconds: 2), () {
+        if (!mounted) return;
+        // DB only — no API call
+        _displayMode.refreshIqamahFromDb().then((_) {
           _displayMode.scheduleIqamahLock();
-        });
-      });
-      _prayerRefreshTimer = Timer.periodic(const Duration(hours: 12), (_) {
-        _displayMode.fetchPrayerData().then((_) {
-          _displayMode.fetchIqamahTimes().then((_) {
-            _displayMode.scheduleProhibited();
-            _displayMode.scheduleIqamahLock();
-          });
+          if (mounted) setState(() {});
         });
       });
     });
@@ -178,27 +197,6 @@ class _ScreenRotatorState extends State<ScreenRotator> {
         .listen((_) { if (mounted) _buildScreens(); });
   }
 
-  Timer? _prayerTimesDebounce;
-
-  void _listenToPrayerTimesChanges() {
-    _prayerTimesSubscription = Supabase.instance.client
-        .from('prayer_times')
-        .stream(primaryKey: ['id'])
-        .listen((_) {
-      if (!mounted) return;
-      // Debounce: multiple rows update in quick succession
-      _prayerTimesDebounce?.cancel();
-      _prayerTimesDebounce = Timer(const Duration(seconds: 2), () {
-        if (!mounted) return;
-        // Only refresh iqamah data from Supabase — no need to hit Aladhan API
-        _displayMode.fetchIqamahTimes().then((_) {
-          _displayMode.scheduleIqamahLock();
-          if (mounted) setState(() {});
-        });
-      });
-    });
-  }
-
   Future<void> _buildScreens() async {
     final slides = await SlidesService().getActiveSlides();
     final screens = <Widget>[
@@ -209,7 +207,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       ...slides.map((s) => SlidesScreen(slide: s)),
     ];
     final durations = <int>[
-      30, 30, 30, 30, // prayer, hadith, dua, verse
+      30, 30, 30, 30,
       ...slides.map((s) => (s['duration_seconds'] as int?) ?? 30),
     ];
     if (mounted) {
@@ -223,11 +221,32 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     }
   }
 
+  DateTime? _parseTimeToday(String time) {
+    try {
+      final trimmed = time.trim();
+      final now = DateTime.now();
+      if (trimmed.contains('AM') || trimmed.contains('PM')) {
+        final parts = trimmed.split(' ');
+        final tp = parts[0].split(':');
+        var hour = int.parse(tp[0]);
+        final minute = int.parse(tp[1]);
+        if (parts[1] == 'PM' && hour != 12) hour += 12;
+        if (parts[1] == 'AM' && hour == 12) hour = 0;
+        return DateTime(now.year, now.month, now.day, hour, minute);
+      }
+      final parts = trimmed.split(':');
+      return DateTime(now.year, now.month, now.day,
+          int.parse(parts[0]), int.parse(parts[1]));
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   void dispose() {
     _rotationTimer?.cancel();
     _midnightTimer?.cancel();
-    _prayerRefreshTimer?.cancel();
+    _maghribRefreshTimer?.cancel();
     _slidesSubscription?.cancel();
     _prayerTimesSubscription?.cancel();
     _prayerTimesDebounce?.cancel();
@@ -246,7 +265,6 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       );
     }
 
-    // Show alert marquee on all screens except silence and slides
     final showAlerts = _alerts.isNotEmpty &&
         _displayMode.mode != DisplayMode.silence &&
         !(_displayMode.mode == DisplayMode.normal && _currentIndex >= 4);

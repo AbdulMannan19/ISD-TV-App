@@ -15,21 +15,23 @@ class SharedData {
   DateTime? _nextIqamahTarget;
   List<DateTime> _iqamahDateTimes = [];
 
+  /// Full init: fetches prayer times from Aladhan API + iqamah from DB.
+  /// Call ONCE on startup and at midnight (new Gregorian day = new prayer times).
   Future<void> init() async {
-    await _fetchAll();
-    await _loadIqamahTimes();
+    await _fetchFromApi();
+    await _loadIqamahFromDb();
     _computeNextTarget();
   }
 
+  /// Refresh only iqamah times from DB (no API call).
+  /// Call when iqamah times change in the database.
   Future<void> refreshIqamah() async {
-    await _fetchAll();
-    await _loadIqamahTimes();
+    await _loadIqamahFromDb();
     _computeNextTarget();
   }
 
-  Future<void> _fetchAll() async {
-    final service = PrayerTimesService();
-    final data = await service.fetchPrayerTimes();
+  Future<void> _fetchFromApi() async {
+    final data = await PrayerTimesService().fetchPrayerTimes();
     if (data == null) return;
     sunrise = data['sunrise'] as String;
     sunset = data['sunset'] as String;
@@ -44,7 +46,7 @@ class SharedData {
     }).toList();
   }
 
-  Future<void> _loadIqamahTimes() async {
+  Future<void> _loadIqamahFromDb() async {
     try {
       final response = await Supabase.instance.client
           .from('prayer_times')
@@ -54,13 +56,26 @@ class SharedData {
       final times = <DateTime>[];
       for (final row in response as List) {
         final prayer = row['prayer'] as String;
-        // On Friday: skip dhuhr, include jummah
-        // Other days: skip jummah, include dhuhr
         if (isFriday && prayer == 'zuhr') continue;
         if (!isFriday && prayer.startsWith('jummah')) continue;
         final dt = _parseTime(row['iqamah'] as String, now);
         if (dt != null) times.add(dt);
       }
+      // Also update iqamah in prayers list from DB
+      final iqamahMap = <String, String>{};
+      for (final row in response as List) {
+        iqamahMap[row['prayer'] as String] = row['iqamah'] as String;
+      }
+      final nameToKey = {'FAJR': 'fajr', 'DHUHR': 'zuhr', 'ASR': 'asr', 'MAGHRIB': 'maghrib', 'ISHA': 'isha'};
+      prayers = prayers.map((p) {
+        final key = nameToKey[p['name']];
+        final dbIqamah = key != null ? iqamahMap[key] : null;
+        return {
+          'name': p['name']!,
+          'adhan': p['adhan']!,
+          'iqamah': dbIqamah != null ? _to12(dbIqamah) : p['iqamah']!,
+        };
+      }).toList();
       times.sort();
       _iqamahDateTimes = times;
     } catch (_) {}
@@ -94,6 +109,16 @@ class SharedData {
       return mins > 0 ? '${hrs} HR ${mins} MIN' : '${hrs} HR';
     }
     return '${totalMin} MIN';
+  }
+
+  String _to12(String time) {
+    if (time.contains('AM') || time.contains('PM')) return time;
+    final parts = time.split(':');
+    final hour = int.parse(parts[0]);
+    final minute = int.parse(parts[1]);
+    final h = hour > 12 ? hour - 12 : (hour == 0 ? 12 : hour);
+    final p = hour >= 12 ? 'PM' : 'AM';
+    return '$h:${minute.toString().padLeft(2, '0')} $p';
   }
 
   DateTime? _parseTime(String time, DateTime now) {

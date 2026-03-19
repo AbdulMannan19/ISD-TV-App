@@ -59,7 +59,8 @@ class DailyContentService {
   }
 
   String _getTodayString() {
-    final now = DateTime.now();
-    return '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final m = SharedData.instance.hijriMonth;
+    final d = SharedData.instance.hijriDay;
+    return '$m-$d';
   }
 }
