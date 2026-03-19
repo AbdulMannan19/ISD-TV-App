@@ -19,10 +19,25 @@ class DisplayModeService {
     _onModeChanged = callback;
   }
 
-  /// Refresh iqamah times from DB only (no API call).
-  /// Then reschedule iqamah lock with updated times.
+  /// Refresh iqamah from DB and fully re-evaluate which mode we should be in.
+  /// Clears all current timers/modes and reschedules everything from scratch.
   Future<void> refreshIqamahFromDb() async {
     await SharedData.instance.refreshIqamah();
+    reevaluate();
+  }
+
+  /// Reset all modes and re-evaluate from scratch based on current SharedData.
+  void reevaluate() {
+    _silenceTimer?.cancel();
+    _prohibitedTimer?.cancel();
+    _iqamahLockTimer?.cancel();
+    mode = DisplayMode.normal;
+    silenceEndTime = null;
+    prohibitedEndTime = null;
+    iqamahLockEndTime = null;
+    scheduleProhibited();
+    scheduleIqamahLock();
+    _onModeChanged?.call();
   }
 
   /// Schedule silence exit. Called when silence mode is active.

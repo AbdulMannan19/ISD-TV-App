@@ -167,9 +167,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       _prayerTimesDebounce?.cancel();
       _prayerTimesDebounce = Timer(const Duration(seconds: 2), () {
         if (!mounted) return;
-        // DB only — no API call
+        // DB only — no API call. Reevaluates all modes/timers.
         _displayMode.refreshIqamahFromDb().then((_) {
-          _displayMode.scheduleIqamahLock();
           if (mounted) setState(() {});
         });
       });
