@@ -180,12 +180,12 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 36,
                     letterSpacing: 3,
                   ),
                 ),
                 const SizedBox(width: 20),
-                _subscriptTime(SharedData.instance.jummah, 28, FontWeight.w600),
+                _timeCell(SharedData.instance.jummah),
               ],
             ),
           ),
@@ -205,7 +205,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
-                fontSize: 13,
+                fontSize: 36,
                 letterSpacing: 1.5,
               ),
             ),

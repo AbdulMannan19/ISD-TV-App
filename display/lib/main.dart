@@ -84,6 +84,12 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   StreamSubscription? _slidesSubscription;
   StreamSubscription? _prayerTimesSubscription;
 
+  /// Active slide ids in `display_order` after the last successful `_buildScreens` (for remapping index on realtime changes).
+  List<Object?> _lastSlideRowIds = [];
+  int _slideBuildSeq = 0;
+
+  static const int _kFixedScreens = 4;
+
   @override
   void initState() {
     super.initState();
@@ -193,28 +199,72 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _slidesSubscription = Supabase.instance.client
         .from('slides')
         .stream(primaryKey: ['id'])
-        .listen((_) { if (mounted) _buildScreens(); });
+        .listen((_) {
+          if (mounted) _buildScreens();
+        });
+  }
+
+  /// When the slide list changes (e.g. `is_active` toggled), keep fixed screens stable and
+  /// map slide indices by id so the current inactive slide is skipped immediately.
+  int _remapIndexAfterSlideListChange(
+    int oldIndex,
+    List<Object?> oldSlideIds,
+    List<Object?> newSlideIds,
+  ) {
+    final newLen = _kFixedScreens + newSlideIds.length;
+    if (newLen <= 0) return 0;
+
+    if (oldIndex < _kFixedScreens) {
+      return oldIndex.clamp(0, newLen - 1);
+    }
+
+    final oldSi = oldIndex - _kFixedScreens;
+    if (oldSlideIds.isEmpty || oldSi < 0 || oldSi >= oldSlideIds.length) {
+      return oldIndex.clamp(0, newLen - 1);
+    }
+
+    final currentId = oldSlideIds[oldSi];
+    final newPos = newSlideIds.indexOf(currentId);
+    if (newPos >= 0) {
+      return _kFixedScreens + newPos;
+    }
+
+    // Was showing a slide that is now inactive — same as pressing “next” in rotation: later slides first, else wrap to start.
+    for (var i = oldSi + 1; i < oldSlideIds.length; i++) {
+      final np = newSlideIds.indexOf(oldSlideIds[i]);
+      if (np >= 0) return _kFixedScreens + np;
+    }
+    return 0;
   }
 
   Future<void> _buildScreens() async {
+    final seq = ++_slideBuildSeq;
+    final oldSlideIds = List<Object?>.from(_lastSlideRowIds);
+
     final slides = await SlidesService().getActiveSlides();
+    if (!mounted || seq != _slideBuildSeq) return;
+
+    final newSlideIds = slides.map<Object?>((s) => s['id']).toList();
+    final remappedIndex = _remapIndexAfterSlideListChange(_currentIndex, oldSlideIds, newSlideIds);
+
     final screens = <Widget>[
       const PrayerTimesScreen(),
       const HadithScreen(),
       const DuaScreen(),
       const VerseScreen(),
-      ...slides.map((s) => SlidesScreen(slide: s)),
+      ...slides.map((s) => SlidesScreen(key: ValueKey(s['id']), slide: s)),
     ];
     final durations = <int>[
       30, 30, 30, 30,
       ...slides.map((s) => (s['duration_seconds'] as int?) ?? 30),
     ];
-    if (mounted) {
+    if (mounted && seq == _slideBuildSeq) {
       setState(() {
-        if (_currentIndex >= screens.length && screens.isNotEmpty) _currentIndex = 0;
+        _currentIndex = remappedIndex.clamp(0, screens.isEmpty ? 0 : screens.length - 1);
         _screens = screens;
         _screenDurations = durations;
         _screensBuilt = true;
+        _lastSlideRowIds = newSlideIds;
       });
       _scheduleNextRotation();
     }
