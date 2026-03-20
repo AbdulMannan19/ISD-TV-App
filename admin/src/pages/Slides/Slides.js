@@ -10,6 +10,13 @@ const PlusIcon = () => (
   </svg>
 );
 
+const SaveIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="16" height="16">
+    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+    <polyline points="17 21 17 13 7 13 7 21" /><polyline points="7 3 7 8 15 8" />
+  </svg>
+);
+
 const TrashIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="14" height="14">
     <path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
@@ -58,11 +65,25 @@ export default function Slides() {
   const [previewFile, setPreviewFile] = useState(null);
   const [dragIdx, setDragIdx] = useState(null);
   const [overIdx, setOverIdx] = useState(null);
+  const [durationEdits, setDurationEdits] = useState({});
+  const [savingDurations, setSavingDurations] = useState(false);
   const uploadRef = useRef();
 
   const fetchSlides = async () => {
     const { data } = await supabase.from('slides').select('*').order('display_order');
-    if (data) setSlides(data);
+    if (data) {
+      setSlides(data);
+      const edits = {};
+      data.forEach(s => {
+        const total = s.duration_seconds || 30;
+        edits[s.id] = {
+          h: String(Math.floor(total / 3600)),
+          m: String(Math.floor((total % 3600) / 60)),
+          s: String(total % 60),
+        };
+      });
+      setDurationEdits(edits);
+    }
   };
 
   useEffect(() => { fetchSlides(); }, []);
@@ -96,26 +117,33 @@ export default function Slides() {
     fetchSlides();
   };
 
-  const updateDuration = async (id, seconds) => {
-    const val = Math.max(5, Math.min(43200, seconds));
-    setSlides(prev => prev.map(s => s.id === id ? { ...s, duration_seconds: val } : s));
-    await supabase.from('slides').update({ duration_seconds: val }).eq('id', id);
+  const handleDurationField = (id, field, value) => {
+    setDurationEdits(prev => ({
+      ...prev,
+      [id]: { ...prev[id], [field]: value },
+    }));
   };
 
-  const getDurationParts = (totalSec) => {
-    const h = Math.floor(totalSec / 3600);
-    const m = Math.floor((totalSec % 3600) / 60);
-    const s = totalSec % 60;
-    return { h, m, s };
-  };
+  const hasDurationChanges = slides.some(s => {
+    const e = durationEdits[s.id];
+    if (!e) return false;
+    const total = s.duration_seconds || 30;
+    const editTotal = (parseInt(e.h) || 0) * 3600 + (parseInt(e.m) || 0) * 60 + (parseInt(e.s) || 0);
+    return Math.max(5, Math.min(43200, editTotal || 5)) !== total;
+  });
 
-  const handleDurationChange = (id, currentSec, field, value) => {
-    const { h, m, s } = getDurationParts(currentSec);
-    const newH = field === 'h' ? (parseInt(value) || 0) : h;
-    const newM = field === 'm' ? (parseInt(value) || 0) : m;
-    const newS = field === 's' ? (parseInt(value) || 0) : s;
-    const total = newH * 3600 + newM * 60 + newS;
-    updateDuration(id, total || 5);
+  const saveDurations = async () => {
+    setSavingDurations(true);
+    const updates = slides.map(s => {
+      const e = durationEdits[s.id];
+      if (!e) return null;
+      const total = (parseInt(e.h) || 0) * 3600 + (parseInt(e.m) || 0) * 60 + (parseInt(e.s) || 0);
+      const val = Math.max(5, Math.min(43200, total || 5));
+      return supabase.from('slides').update({ duration_seconds: val }).eq('id', s.id);
+    }).filter(Boolean);
+    await Promise.all(updates);
+    await fetchSlides();
+    setSavingDurations(false);
   };
 
   const onDragStart = (i) => setDragIdx(i);
@@ -145,6 +173,11 @@ export default function Slides() {
         <button className="btn btn-green" onClick={() => setShowModal(true)}>
           <PlusIcon /> Add Slide
         </button>
+        {hasDurationChanges && (
+          <button className="btn btn-green" onClick={saveDurations} disabled={savingDurations} style={{ marginLeft: 8 }}>
+            <SaveIcon /> {savingDurations ? 'Saving...' : 'Save Durations'}
+          </button>
+        )}
       </div>
 
       <div className="slides-grid">
@@ -171,8 +204,8 @@ export default function Slides() {
                   type="number"
                   min="0"
                   max="12"
-                  value={getDurationParts(slide.duration_seconds || 30).h}
-                  onChange={e => handleDurationChange(slide.id, slide.duration_seconds || 30, 'h', e.target.value)}
+                  value={durationEdits[slide.id]?.h ?? '0'}
+                  onChange={e => handleDurationField(slide.id, 'h', e.target.value)}
                   className="slide-duration-input"
                 />
                 <span>hr</span>
@@ -180,8 +213,8 @@ export default function Slides() {
                   type="number"
                   min="0"
                   max="59"
-                  value={getDurationParts(slide.duration_seconds || 30).m}
-                  onChange={e => handleDurationChange(slide.id, slide.duration_seconds || 30, 'm', e.target.value)}
+                  value={durationEdits[slide.id]?.m ?? '0'}
+                  onChange={e => handleDurationField(slide.id, 'm', e.target.value)}
                   className="slide-duration-input"
                 />
                 <span>min</span>
@@ -189,8 +222,8 @@ export default function Slides() {
                   type="number"
                   min="0"
                   max="59"
-                  value={getDurationParts(slide.duration_seconds || 30).s}
-                  onChange={e => handleDurationChange(slide.id, slide.duration_seconds || 30, 's', e.target.value)}
+                  value={durationEdits[slide.id]?.s ?? '30'}
+                  onChange={e => handleDurationField(slide.id, 's', e.target.value)}
                   className="slide-duration-input"
                 />
                 <span>sec</span>
