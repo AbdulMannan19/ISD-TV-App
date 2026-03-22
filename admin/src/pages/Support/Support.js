@@ -29,12 +29,12 @@ export default function Support() {
           <h2 className="support-card-title">Contact</h2>
           <ul className="support-list">
             <li>
-              <MailIcon />
-              <a href="mailto:abdulmannan34695@gmail.com">abdulmannan34695@gmail.com</a>
+              <PhoneIcon />
+              <a href="tel:+19132636353">+1 (913) 263-6353</a>
             </li>
             <li>
-              <PhoneIcon />
-              <a href="tel:+19132636353">913-263-6353</a>
+              <MailIcon />
+              <a href="mailto:abdulmannan34695@gmail.com">abdulmannan34695@gmail.com</a>
             </li>
           </ul>
         </section>
