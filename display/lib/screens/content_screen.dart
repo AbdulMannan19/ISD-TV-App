@@ -193,8 +193,8 @@ class _ContentScreenState extends State<ContentScreen> {
             _buildClock(),
             const SizedBox(height: 8),
             Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              _sunInfo('☀️', 'SUNRISE', shared.sunrise),
-              _sunInfo('🌅', 'SUNSET', shared.sunset),
+              _sunInfo('SUNRISE', shared.sunrise),
+              _sunInfo('SUNSET', shared.sunset),
             ]),
             const SizedBox(height: 8),
             Container(
@@ -296,10 +296,8 @@ class _ContentScreenState extends State<ContentScreen> {
     );
   }
 
-  Widget _sunInfo(String icon, String label, String time) {
+  Widget _sunInfo(String label, String time) {
     return Column(children: [
-      Text(icon, style: const TextStyle(fontSize: 18)),
-      const SizedBox(height: 4),
       Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 9, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
       const SizedBox(height: 2),
       _subscriptTime(time, 15, FontWeight.w500),

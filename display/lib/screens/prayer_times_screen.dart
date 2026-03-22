@@ -333,8 +333,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _sunInfo('SUNRISE', SharedData.instance.sunrise),
-              _sunInfo('SUNSET', SharedData.instance.sunset),
+              _sunInfo('☀️', 'SUNRISE', SharedData.instance.sunrise),
+              _sunInfo('🌅', 'SUNSET', SharedData.instance.sunset),
             ],
           ),
           const SizedBox(height: 12),
@@ -378,9 +378,11 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     );
   }
 
-  Widget _sunInfo(String label, String time) {
+  Widget _sunInfo(String icon, String label, String time) {
     return Column(
       children: [
+        Text(icon, style: const TextStyle(fontSize: 20)),
+        const SizedBox(height: 4),
         Text(
           label,
           style: TextStyle(
