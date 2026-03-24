@@ -63,10 +63,9 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   double _dynamicFontSize(int length) {
-    if (length < 100) return 32;
-    if (length < 200) return 26;
-    if (length < 400) return 22;
-    return 18;
+    if (length < 100) return 28;
+    if (length < 200) return 22;
+    return 19;
   }
 
   @override
@@ -129,7 +128,7 @@ class _ContentScreenState extends State<ContentScreen> {
             textAlign: TextAlign.center,
             style: TextStyle(color: const Color(0xFF0A2A5E).withOpacity(0.6),
               fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 3)),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -140,7 +139,7 @@ class _ContentScreenState extends State<ContentScreen> {
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
