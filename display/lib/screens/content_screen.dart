@@ -63,9 +63,10 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   double _dynamicFontSize(int length) {
-    if (length < 100) return 28;
-    if (length < 200) return 22;
-    return 19;
+    if (length < 100) return 32;
+    if (length < 200) return 26;
+    if (length < 400) return 22;
+    return 18;
   }
 
   @override
@@ -119,7 +120,7 @@ class _ContentScreenState extends State<ContentScreen> {
         color: Colors.white.withOpacity(0.95),
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.all(36),
+      padding: const EdgeInsets.all(15),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
