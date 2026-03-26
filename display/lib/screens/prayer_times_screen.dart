@@ -136,7 +136,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.55),
-                    fontSize: 12,
+                    fontSize: 14,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w600,
                   ),
@@ -149,7 +149,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.55),
-                    fontSize: 12,
+                    fontSize: 14,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w600,
                   ),
@@ -202,7 +202,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
-                fontSize: 15,
+                fontSize: 18,
                 letterSpacing: 1.5,
               ),
             ),
@@ -313,7 +313,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   'NEXT IQAMAH IN',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.55),
-                    fontSize: 11,
+                    fontSize: 13,
                     letterSpacing: 2,
                   ),
                 ),
@@ -322,7 +322,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   SharedData.instance.getCountdown(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 22,
+                    fontSize: 26,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -358,7 +358,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp[0],
           style: const TextStyle(
             color: Colors.white,
-            fontSize: 46,
+            fontSize: 54,
             fontWeight: FontWeight.w700,
             letterSpacing: -1,
           ),

@@ -8,6 +8,7 @@ import 'screens/hadith_screen.dart';
 import 'screens/dua_screen.dart';
 import 'screens/verse_screen.dart';
 import 'screens/slides_screen.dart';
+import 'screens/split_slide_screen.dart';
 import 'screens/silence_screen.dart';
 import 'screens/prohibited_time_screen.dart';
 import 'services/slides_service.dart';
@@ -225,7 +226,12 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       const HadithScreen(),
       const DuaScreen(),
       const VerseScreen(),
-      ...slides.map((s) => SlidesScreen(key: ValueKey(s['id']), slide: s)),
+      ...slides.map((s) {
+        final mode = (s['display_mode'] as String?) ?? 'full';
+        return mode == 'split'
+            ? SplitSlideScreen(key: ValueKey(s['id']), slide: s)
+            : SlidesScreen(key: ValueKey(s['id']), slide: s);
+      }),
     ];
     final durations = <int>[
       30, 30, 30, 30,

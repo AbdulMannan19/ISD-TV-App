@@ -10,6 +10,7 @@ class DuaScreen extends StatelessWidget {
     return ContentScreen(
       title: 'DUA OF THE DAY',
       fetchContent: () async => SharedData.instance.currentDua,
+      contentTextColor: const Color(0xFF5B3A8C), // deep purple
     );
   }
 }

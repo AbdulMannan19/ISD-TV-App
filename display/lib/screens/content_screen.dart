@@ -7,12 +7,16 @@ class ContentScreen extends StatefulWidget {
   final String title;
   final Future<Map<String, String>> Function()? fetchContent;
   final Widget Function(BuildContext context)? customContent;
+  final Color contentBgColor;
+  final Color contentTextColor;
 
   const ContentScreen({
     super.key,
     required this.title,
     this.fetchContent,
     this.customContent,
+    this.contentBgColor = const Color(0xF2FFFFFF),
+    this.contentTextColor = const Color(0xFF1a1a2e),
   });
 
   @override
@@ -135,7 +139,7 @@ class _ContentScreenState extends State<ContentScreen> {
               child: SingleChildScrollView(
                 child: Text(content!['text']!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: const Color(0xFF1a1a2e),
+                  style: TextStyle(color: widget.contentTextColor,
                     fontSize: _dynamicFontSize(content!['text']!.length), fontWeight: FontWeight.w400, height: 1.6, letterSpacing: 0.3)),
               ),
             ),
@@ -203,10 +207,10 @@ class _ContentScreenState extends State<ContentScreen> {
               decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
               child: Column(children: [
                 Text('NEXT IQAMAH IN',
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 2)),
+                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2)),
                 const SizedBox(height: 2),
                 Text(shared.getCountdown(),
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 1)),
               ]),
             ),
           ]),
@@ -223,7 +227,7 @@ class _ContentScreenState extends State<ContentScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(sp[0],
-          style: const TextStyle(color: Colors.white, fontSize: 48, fontWeight: FontWeight.w700, letterSpacing: -1)),
+          style: const TextStyle(color: Colors.white, fontSize: 54, fontWeight: FontWeight.w700, letterSpacing: -1)),
         Padding(
           padding: const EdgeInsets.only(bottom: 6, left: 4),
           child: Text(sp.length > 1 ? sp[1] : '',
@@ -267,9 +271,9 @@ class _ContentScreenState extends State<ContentScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         const SizedBox(height: 20),
-        Text('STARTS', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        Text('STARTS', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
         const SizedBox(height: 4),
-        Text('IQAMAH', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        Text('IQAMAH', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
       ],
     );
   }
@@ -277,7 +281,7 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _prayerBarItem(Map<String, String> p) {
     return Column(
       children: [
-        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
         _subscriptTime(p['adhan']!, 22, FontWeight.w700),
         const SizedBox(height: 2),
@@ -289,7 +293,7 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _jumuahBarItem(String time) {
     return Column(
       children: [
-        const Text("JUMU'AH", style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        const Text("JUMU'AH", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
         _subscriptTime(time, 22, FontWeight.w700),
       ],

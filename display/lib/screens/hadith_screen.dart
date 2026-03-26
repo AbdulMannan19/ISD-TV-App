@@ -10,6 +10,7 @@ class HadithScreen extends StatelessWidget {
     return ContentScreen(
       title: 'HADITH OF THE DAY',
       fetchContent: () async => SharedData.instance.currentHadith,
+      contentTextColor: const Color(0xFF1B6B7D), // teal
     );
   }
 }
