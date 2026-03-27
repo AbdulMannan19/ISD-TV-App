@@ -128,3 +128,45 @@
   color: rgba(255, 255, 255, 0.6) !important;
   font-size: 0.95rem !important;
 }
+
+/* Make it fit on smaller mobile screens without horizontal overflow */
+@media (max-width: 450px) {
+  .embed-container {
+    padding: 8px;
+  }
+  .embed-header {
+    padding: 16px 12px 12px;
+  }
+  .embed-title {
+    font-size: 1.25rem;
+  }
+  .embed-table thead th {
+    padding: 8px 6px;
+    letter-spacing: 0.5px;
+    font-size: 0.65rem;
+  }
+  .embed-table thead th:first-child {
+    padding-left: 12px;
+  }
+  .embed-table tbody td {
+    padding: 10px 6px;
+    font-size: 0.9rem;
+  }
+  .embed-prayer-name {
+    padding-left: 12px !important;
+    font-size: 0.9rem !important;
+  }
+  .embed-sunrise-row td {
+    font-size: 0.85rem !important;
+  }
+  .embed-jummah {
+    margin: 12px 12px;
+    padding: 10px 12px;
+  }
+  .embed-jummah-label {
+    font-size: 0.9rem;
+  }
+  .embed-jummah-time {
+    font-size: 1rem;
+  }
+}
