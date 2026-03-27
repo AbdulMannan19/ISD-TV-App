@@ -39,15 +39,23 @@
   letter-spacing: 1px;
 }
 
-.embed-date {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 0.8rem;
+.embed-subtitle {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  font-weight: 600;
   margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+.embed-date {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.95rem;
+  margin-top: 6px;
 }
 
 .embed-hijri {
-  color: rgba(255, 255, 255, 0.4);
-  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.9rem;
   margin-top: 2px;
 }
 
@@ -57,9 +65,9 @@
 }
 
 .embed-table thead th {
-  color: rgba(255, 255, 255, 0.45);
-  font-size: 0.7rem;
-  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.85rem;
+  font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
   padding: 8px 16px;
@@ -89,7 +97,7 @@
 .embed-prayer-name {
   text-align: left !important;
   padding-left: 24px !important;
-  color: rgba(255, 255, 255, 0.7) !important;
+  color: #ffffff !important;
   font-weight: 700 !important;
   font-size: 0.95rem !important;
   letter-spacing: 0.5px;
@@ -143,7 +151,7 @@
   .embed-table thead th {
     padding: 8px 6px;
     letter-spacing: 0.5px;
-    font-size: 0.65rem;
+    font-size: 0.8rem;
   }
   .embed-table thead th:first-child {
     padding-left: 12px;
