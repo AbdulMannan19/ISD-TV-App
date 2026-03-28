@@ -248,7 +248,7 @@ export default function PrayerTimes() {
 
       <div className="pt-info">
         <ClockIcon />
-        <span>Adhan (start) times, sunrise, and Hijri date come from the Masjidal API. Iqamah times are set here and stored in the database; they are not taken from Masjidal.</span>
+        <span>Adhan (start) times, sunrise, and Hijri date come from the Aladhan API. Iqamah times are set here and stored in the database; they are not taken from Aladhan.</span>
       </div>
 
       <div className="pt-table-wrap">

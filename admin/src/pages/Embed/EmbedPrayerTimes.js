@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../supabase';
 import './EmbedPrayerTimes.css';
 
-const MASJIDAL_URL = 'https://masjidal.com/api/v1/time/range?masjid_id=O8L7ppA5';
 const PRAYERS = ['fajr', 'zuhr', 'asr', 'maghrib', 'isha'];
 const LABELS = { fajr: 'Fajr', zuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha' };
 
@@ -30,24 +29,35 @@ export default function EmbedPrayerTimes() {
       }
     };
 
-    const fetchMasjidal = async () => {
+    const fetchAladhan = async () => {
       try {
-        const res = await fetch(MASJIDAL_URL);
+        const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
+        const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
+        
+        const now = new Date();
+        const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+        const apiUrl = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+
+        const res = await fetch(apiUrl);
         const json = await res.json();
-        if (json.status === 'success' && json.data?.salah?.length) {
-          const day = json.data.salah[0];
-          const month = day.hijri_month || '';
-          const dateParts = (day.hijri_date || '').split(',');
-          const dayNum = dateParts[0]?.trim() || '';
-          const year = dateParts[1]?.trim() || '';
+        if (json.code === 200 && json.data) {
+          const hijri = json.data.date.hijri;
+          const month = hijri.month.en || '';
+          const dayNum = hijri.day || '';
+          const year = hijri.year || '';
           setHijriDate(year ? `${month} ${dayNum}, ${year}` : `${month} ${dayNum}`);
-          setSunrise(day.sunrise || '');
+          
+          let rawSunrise = json.data.timings.Sunrise || '';
+          if (rawSunrise) {
+            rawSunrise = rawSunrise.split(' ')[0];
+          }
+          setSunrise(rawSunrise);
         }
       } catch (_) { }
     };
 
     const init = async () => {
-      await Promise.all([fetchDb(), fetchMasjidal()]);
+      await Promise.all([fetchDb(), fetchAladhan()]);
       setLoading(false);
     };
     init();
