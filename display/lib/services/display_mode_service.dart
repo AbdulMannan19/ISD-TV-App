@@ -28,6 +28,59 @@ class DisplayModeService {
     _silenceTimer?.cancel();
     _prohibitedTimer?.cancel();
     _iqamahLockTimer?.cancel();
+
+    // Determine the correct mode based on current time
+    final now = DateTime.now();
+    final shared = SharedData.instance;
+
+    // Check if we're in a silence window (past an iqamah, within silence duration)
+    final iqamahDts = <DateTime>[];
+    for (final p in shared.prayers) {
+      final dt = _parseTimeToday(p['iqamah']!);
+      if (dt != null) iqamahDts.add(dt);
+    }
+    if (now.weekday == DateTime.friday && shared.jummah.isNotEmpty) {
+      final jDt = _parseTimeToday(shared.jummah);
+      if (jDt != null) iqamahDts.add(jDt);
+    }
+
+    // Check silence: iqamah passed but within silence duration
+    for (final iq in iqamahDts) {
+      if (now.isAfter(iq)) {
+        final isFridayJummah = now.weekday == DateTime.friday &&
+            shared.jummah.isNotEmpty &&
+            _parseTimeToday(shared.jummah) == iq;
+        final silenceMins = isFridayJummah ? 45 : 10;
+        final silenceEnd = iq.add(Duration(minutes: silenceMins));
+        if (now.isBefore(silenceEnd)) {
+          mode = DisplayMode.silence;
+          silenceEndTime = silenceEnd;
+          prohibitedEndTime = null;
+          iqamahLockEndTime = null;
+          _onModeChanged?.call();
+          _scheduleSilenceExit();
+          return;
+        }
+      }
+    }
+
+    // Check iqamah lock: 5 min before iqamah
+    for (final iq in iqamahDts) {
+      final lockStart = iq.subtract(const Duration(minutes: 5));
+      if (now.isAfter(lockStart) && now.isBefore(iq)) {
+        mode = DisplayMode.iqamahLock;
+        iqamahLockEndTime = iq;
+        silenceEndTime = null;
+        prohibitedEndTime = null;
+        _onModeChanged?.call();
+        _iqamahLockTimer = Timer(iq.difference(now), () {
+          _enterSilenceFromLock(iq);
+        });
+        return;
+      }
+    }
+
+    // Otherwise normal — schedule future timers
     mode = DisplayMode.normal;
     silenceEndTime = null;
     prohibitedEndTime = null;

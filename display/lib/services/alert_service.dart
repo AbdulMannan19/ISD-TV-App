@@ -37,10 +37,6 @@ class AlertService {
     } catch (_) {}
   }
 
-  Future<void> refreshAlerts() async {
-    await _fetchAlerts();
-  }
-
   void dispose() {
     _subscription?.cancel();
     _controller.close();
