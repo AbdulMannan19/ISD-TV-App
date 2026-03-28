@@ -1,3 +1,21 @@
+git status
+git add .
+git commit -m "quick commit"
+git push
+clear
+
+cd display
+flutter run -d windows
+
+cd admin
+npm install
+clear
+npm start
+
+cd admin
+npm start
+
+
 # ISD TV Display System
 
 The **ISD (Islamic Society of Denton) TV Display System** is a comprehensive, dual-component application designed to effortlessly manage and beautifully display prayer times, announcements, and Islamic content on Masjid TV screens.

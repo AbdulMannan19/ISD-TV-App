@@ -189,7 +189,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               style: TextStyle(
                 color: Colors.white.withOpacity(0.7),
                 fontWeight: FontWeight.bold,
-                fontSize: 20,
+                fontSize: 22,
                 letterSpacing: 1.5,
               ),
             ),
@@ -300,8 +300,9 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   'NEXT IQAMAH IN',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.55),
-                    fontSize: 13,
+                    fontSize: 14,
                     letterSpacing: 2,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -309,7 +310,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   SharedData.instance.getCountdown(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 26,
+                    fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -372,12 +373,13 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           label,
           style: TextStyle(
             color: Colors.white.withOpacity(0.5),
-            fontSize: 10,
+            fontSize: 12,
             letterSpacing: 1.5,
+            fontWeight: FontWeight.w600,
           ),
         ),
         const SizedBox(height: 2),
-        _subscriptTime(time, 18, FontWeight.w500),
+        _subscriptTime(time, 22, FontWeight.w600),
       ],
     );
   }

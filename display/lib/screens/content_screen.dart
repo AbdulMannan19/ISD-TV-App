@@ -121,7 +121,7 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _buildDefaultContent() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: const Color(0xFFFAF6F0),
         borderRadius: BorderRadius.circular(20),
       ),
       padding: const EdgeInsets.all(15),
@@ -131,7 +131,7 @@ class _ContentScreenState extends State<ContentScreen> {
         children: [
           Text(widget.title,
             textAlign: TextAlign.center,
-            style: TextStyle(color: const Color(0xFF0A2A5E).withOpacity(0.6),
+            style: TextStyle(color: const Color(0xFF8B6914).withOpacity(0.7),
               fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 3)),
           const SizedBox(height: 12),
           Expanded(
@@ -139,7 +139,7 @@ class _ContentScreenState extends State<ContentScreen> {
               child: SingleChildScrollView(
                 child: Text(content!['text']!,
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: widget.contentTextColor,
+                  style: TextStyle(color: const Color(0xFF8B6914),
                     fontSize: _dynamicFontSize(content!['text']!.length), fontWeight: FontWeight.w400, height: 1.6, letterSpacing: 0.3)),
               ),
             ),
@@ -148,11 +148,11 @@ class _ContentScreenState extends State<ContentScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF0A2A5E).withOpacity(0.08),
+              color: const Color(0xFF8B6914).withOpacity(0.12),
               borderRadius: BorderRadius.circular(8)),
             child: Text(content!['source']!,
               textAlign: TextAlign.center,
-              style: TextStyle(color: const Color(0xFF0A2A5E).withOpacity(0.7),
+              style: TextStyle(color: const Color(0xFF8B6914).withOpacity(0.8),
                 fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           ),
         ],
@@ -170,7 +170,6 @@ class _ContentScreenState extends State<ContentScreen> {
       ),
       padding: const EdgeInsets.all(12),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Column(children: [
             Container(
@@ -186,27 +185,26 @@ class _ContentScreenState extends State<ContentScreen> {
               Text(shared.hijriDate, textAlign: TextAlign.center,
                 style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, letterSpacing: 0.5)),
           ]),
-          Column(children: [
-            _buildClock(),
-            const SizedBox(height: 8),
-            Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
-              _sunInfo('SUNRISE', shared.sunrise),
-              _sunInfo('SUNSET', shared.sunset),
-            ]),
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-              child: Column(children: [
-                Text('NEXT IQAMAH IN',
-                  style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 2)),
-                const SizedBox(height: 2),
-                Text(shared.getCountdown(),
-                  style: const TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold, letterSpacing: 1)),
-              ]),
-            ),
+          const Spacer(),
+          _buildClock(),
+          const SizedBox(height: 10),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
+            _sunInfo('SUNRISE', shared.sunrise),
+            _sunInfo('SUNSET', shared.sunset),
           ]),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
+            child: Column(children: [
+              Text('NEXT IQAMAH IN',
+                style: TextStyle(color: Colors.white.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2)),
+              const SizedBox(height: 4),
+              Text(shared.getCountdown(),
+                style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            ]),
+          ),
         ],
       ),
     );
@@ -274,7 +272,7 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _prayerBarItem(Map<String, String> p) {
     return Column(
       children: [
-        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 1)),
+        Text(p['name']!, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700, letterSpacing: 1)),
         const SizedBox(height: 4),
         _subscriptTime(p['adhan']!, 22, FontWeight.w700),
         const SizedBox(height: 2),
@@ -295,9 +293,9 @@ class _ContentScreenState extends State<ContentScreen> {
 
   Widget _sunInfo(String label, String time) {
     return Column(children: [
-      Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+      Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
       const SizedBox(height: 2),
-      _subscriptTime(time, 18, FontWeight.w500),
+      _subscriptTime(time, 22, FontWeight.w600),
     ]);
   }
 

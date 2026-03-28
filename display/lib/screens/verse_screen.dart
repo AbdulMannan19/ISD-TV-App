@@ -10,7 +10,7 @@ class VerseScreen extends StatelessWidget {
     return ContentScreen(
       title: 'VERSE OF THE DAY',
       fetchContent: () async => SharedData.instance.currentVerse,
-      contentTextColor: const Color(0xFF8B6914), // golden/beige
+      contentTextColor: const Color(0xFF8B6914), // golden
     );
   }
 }
