@@ -64,6 +64,53 @@ export default function EmbedPrayerTimes() {
   const now = new Date();
   const jummah = times['jummah'];
 
+  const parseTimeMins = (timeStr) => {
+    if (!timeStr) return -1;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+      const [time, period] = timeStr.trim().split(' ');
+      let [h, m] = time.split(':').map(Number);
+      if (period === 'PM' && h !== 12) h += 12;
+      if (period === 'AM' && h === 12) h = 0;
+      return h * 60 + m;
+    }
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+  };
+
+  const getCurrentAndNextPrayer = () => {
+    if (!times || Object.keys(times).length === 0) return { current: null, next: null };
+    
+    const currentMins = now.getHours() * 60 + now.getMinutes();
+
+    const prayerMins = PRAYERS.map(p => {
+      const t = times[p];
+      if (!t || !t.adhan) return null;
+      return { prayer: p, mins: parseTimeMins(t.adhan) };
+    }).filter(Boolean);
+    
+    prayerMins.sort((a, b) => a.mins - b.mins);
+    
+    let current = null;
+    let next = null;
+    
+    for (let i = 0; i < prayerMins.length; i++) {
+       if (currentMins < prayerMins[i].mins) {
+          next = prayerMins[i].prayer;
+          current = i === 0 ? prayerMins[prayerMins.length - 1].prayer : prayerMins[i - 1].prayer;
+          break;
+       }
+    }
+    
+    if (!next && prayerMins.length > 0) {
+       current = prayerMins[prayerMins.length - 1].prayer;
+       next = prayerMins[0].prayer;
+    }
+    
+    return { current, next };
+  };
+
+  const { current, next } = getCurrentAndNextPrayer();
+
   return (
     <div className="embed-container">
       <div className="embed-card">
@@ -86,8 +133,15 @@ export default function EmbedPrayerTimes() {
             {PRAYERS.map(p => {
               const t = times[p];
               if (!t) return null;
+
+              const isCurrent = p === current;
+              const isNext = p === next;
+              let rowClass = "";
+              if (isCurrent) rowClass = "embed-current-prayer";
+              if (isNext) rowClass = "embed-next-prayer";
+
               const row = (
-                <tr key={p}>
+                <tr key={p} className={rowClass}>
                   <td className="embed-prayer-name">{LABELS[p]}</td>
                   <td>{to12(t.adhan)}</td>
                   <td className="embed-iqamah">{to12(t.iqamah)}</td>
