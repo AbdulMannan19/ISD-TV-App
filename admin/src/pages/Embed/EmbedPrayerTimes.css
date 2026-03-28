@@ -21,8 +21,7 @@
 .embed-card {
   width: 100%;
   max-width: 420px;
-  background-color: #101830;
-  background-image: radial-gradient(ellipse at 50% 30%, rgba(60, 90, 180, 0.6) 0%, rgba(40, 60, 140, 0.35) 50%, transparent 80%);
+  background: #1C244B;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 0;
   overflow: hidden;
@@ -34,29 +33,31 @@
 }
 
 .embed-title {
-  color: #fffaec;
+  color: #ffffff;
   font-size: 1.4rem;
   font-weight: 700;
   letter-spacing: 1px;
 }
 
 .embed-subtitle {
-  color: #d0c090;
+  color: #d4af37;
   font-size: 1rem;
-  font-weight: 600;
+  font-weight: 700;
   margin-top: 4px;
   letter-spacing: 0.5px;
 }
 
 .embed-date {
-  color: rgba(208, 192, 144, 0.8);
+  color: #d4af37;
   font-size: 0.95rem;
+  font-weight: 400;
   margin-top: 6px;
 }
 
 .embed-hijri {
-  color: rgba(208, 192, 144, 0.6);
+  color: #d4af37;
   font-size: 0.9rem;
+  font-weight: 400;
   margin-top: 2px;
 }
 
@@ -66,12 +67,12 @@
 }
 
 .embed-table thead th {
-  color: #f0c878;
+  color: #d4af37;
   font-size: 0.85rem;
   font-weight: 700;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  padding: 8px 16px;
+  padding: 12px 16px;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -81,14 +82,25 @@
   padding-left: 24px;
 }
 
+.embed-table thead th:last-child {
+  text-align: right;
+  padding-right: 24px;
+}
+
 .embed-table tbody td {
-  color: #fffaec;
+  color: #ffffff;
   font-size: 1.05rem;
-  font-weight: 500;
-  padding: 12px 16px;
+  font-weight: 400;
+  padding: 14px 16px;
   text-align: center;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.embed-table tbody td:last-child {
+  text-align: right;
+  padding-right: 24px;
+  color: #d4af37 !important;
 }
 
 .embed-table tbody tr:last-child td {
@@ -96,13 +108,13 @@
 }
 
 .embed-table tbody tr:nth-child(even) {
-  background-color: rgba(255, 255, 255, 0.07);
+  background-color: rgba(255, 255, 255, 0.03);
 }
 
 .embed-prayer-name {
   text-align: left !important;
   padding-left: 24px !important;
-  color: #fffaec !important;
+  color: #ffffff !important;
   letter-spacing: 0.5px;
 }
 
@@ -114,57 +126,66 @@
   justify-content: center;
   gap: 16px;
   margin: 12px 16px 16px;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
 
 .embed-jummah-label {
-  color: #fffaec;
-  font-weight: 700;
-  font-size: 1rem;
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 1.05rem;
   letter-spacing: 1px;
 }
 
 .embed-jummah-time {
-  color: #f0c878;
+  color: #d4af37;
   font-size: 1.15rem;
   font-weight: 600;
 }
 
 .embed-sunrise-row td {
-  color: rgba(255, 255, 255, 0.6) !important;
-  font-size: 0.95rem !important;
+  color: #a0a0a0 !important;
+}
+
+.embed-sunrise-time {
+  text-align: center !important;
+  padding-right: 16px !important;
 }
 
 /* Premium Highlight Styles for Current and Next Prayers */
 .embed-current-prayer td {
-  background: linear-gradient(90deg, rgba(255, 250, 236, 0.12) 0%, rgba(255, 250, 236, 0.02) 100%) !important;
-  color: #fffaec !important;
-  font-weight: 800 !important;
-  text-shadow: 0px 2px 8px rgba(255, 250, 236, 0.4);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-shadow: 0px 1px 6px rgba(255, 255, 255, 0.3);
 }
+
 .embed-current-prayer td:first-child {
-  box-shadow: inset 4px 0 0 0 #fffaec;
+  box-shadow: inset 4px 0 0 0 #ffffff;
 }
+
 .embed-current-prayer .embed-prayer-name {
-  color: #fffaec !important;
-  font-weight: 800 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
 }
 
 .embed-next-prayer td {
-  background: linear-gradient(90deg, rgba(240, 200, 120, 0.15) 0%, rgba(240, 200, 120, 0.03) 100%) !important;
-  color: #f0c878 !important; /* Elegant Iznik gold accent */
-  font-weight: 700 !important;
-  text-shadow: 0px 2px 8px rgba(240, 200, 120, 0.3);
+  background: linear-gradient(90deg, rgba(212, 175, 55, 0.12) 0%, rgba(212, 175, 55, 0.02) 100%) !important;
+  color: #d4af37 !important;
+  /* Elegant Refined Gold accent */
+  font-weight: 600 !important;
+  text-shadow: 0px 1px 6px rgba(212, 175, 55, 0.3);
 }
+
 .embed-next-prayer td:first-child {
-  box-shadow: inset 4px 0 0 0 #f0c878;
+  box-shadow: inset 4px 0 0 0 #d4af37;
 }
+
 .embed-next-prayer .embed-prayer-name {
-  color: #f0c878 !important;
-  font-weight: 700 !important;
+  color: #d4af37 !important;
+  font-weight: 600 !important;
 }
 
 /* Make it fit on smaller mobile screens without horizontal overflow */

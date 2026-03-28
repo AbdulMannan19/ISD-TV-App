@@ -153,7 +153,7 @@ export default function EmbedPrayerTimes() {
                   row,
                   <tr key="sunrise" className="embed-sunrise-row">
                     <td className="embed-prayer-name">Sunrise</td>
-                    <td colSpan="2">{to12(sunrise)}</td>
+                    <td colSpan="2" className="embed-sunrise-time">{to12(sunrise)}</td>
                   </tr>
                 ];
               }
