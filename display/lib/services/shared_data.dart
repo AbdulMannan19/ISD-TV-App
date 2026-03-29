@@ -131,6 +131,11 @@ class SharedData {
         current = i;
       }
     }
+    // If it's before the first prayer of the day (Fajr), 
+    // the current prayer is the last one of the previous day (Isha).
+    if (current == -1 && adhans.isNotEmpty) {
+      return adhans.length - 1;
+    }
     return current;
   }
 
@@ -141,16 +146,23 @@ class SharedData {
     final now = DateTime.now();
     DateTime? target;
     for (final dt in _iqamahDateTimes) {
-      if (dt.isAfter(now)) { target = dt; break; }
+      if (dt.isAfter(now)) {
+        target = dt;
+        break;
+      }
     }
-    if (target == null) return -1;
+
+    // If no iqamah is after now today, the next one is Fajr (index 0).
+    if (target == null) return 0;
+
+    // Find the index of the prayer matching this iqamah time.
     for (int i = 0; i < prayers.length; i++) {
-      final dt = _parseTime(prayers[i]['iqamah']!, now);
-      if (dt != null && dt.hour == target.hour && dt.minute == target.minute) {
+      final pDt = _parseTime(prayers[i]['iqamah']!, now);
+      if (pDt != null && pDt.hour == target.hour && pDt.minute == target.minute) {
         return i;
       }
     }
-    return -1;
+    return 0; // Fallback to Fajr
   }
 
   String _to12(String time) {

@@ -280,34 +280,48 @@ class _ContentScreenState extends State<ContentScreen> {
     bool isCurrent = false,
     bool isNext    = false,
   }) {
-    final nameFg = isCurrent ? theme.accentBright : theme.text;
-    final rowBg  = isCurrent
-        ? theme.accent.withOpacity(0.14)
-        : isNext
-            ? theme.accent.withOpacity(0.06)
-            : Colors.transparent;
+    final nameFg = isNext
+        ? theme.accentBright
+        : isCurrent
+            ? theme.accent
+            : theme.text;
+    final rowDecor = isNext
+        ? BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.accent.withOpacity(0.18),
+            boxShadow: [
+              BoxShadow(
+                color: theme.accent.withOpacity(0.2),
+                blurRadius: 10,
+                spreadRadius: 1,
+              )
+            ],
+          )
+        : isCurrent
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: theme.accent.withOpacity(0.15),
+              )
+            : null;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
       margin: const EdgeInsets.symmetric(horizontal: 2),
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
-      decoration: BoxDecoration(
-        color: rowBg,
-        borderRadius: BorderRadius.circular(8),
-      ),
+      decoration: rowDecor,
       child: Column(
         children: [
           Text(p['name']!,
             style: TextStyle(
               color: nameFg,
               fontSize: 18,
-              fontWeight: FontWeight.w700,
+              fontWeight: isNext ? FontWeight.w900 : FontWeight.w700,
               letterSpacing: 1,
             )),
           const SizedBox(height: 4),
-          _subscriptTime(p['adhan']!,  22, FontWeight.w700, theme),
+          _subscriptTime(p['adhan']!,  22, FontWeight.w700, theme, isNext: isNext, isCurrent: isCurrent),
           const SizedBox(height: 2),
-          _subscriptTime(p['iqamah']!, 22, FontWeight.w700, theme, isAccent: true),
+          _subscriptTime(p['iqamah']!, 22, FontWeight.w700, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
         ],
       ),
     );
@@ -331,8 +345,10 @@ class _ContentScreenState extends State<ContentScreen> {
     ]);
   }
 
-  Widget _subscriptTime(String time, double fontSize, FontWeight weight, ThemeConfig theme, {bool isAccent = false}) {
-    final cMain = isAccent ? theme.accentBright : theme.text;
+  Widget _subscriptTime(String time, double fontSize, FontWeight weight, ThemeConfig theme, {bool isAccent = false, bool isNext = false, bool isCurrent = false}) {
+    final cMain = isAccent 
+        ? (isNext ? theme.accentBright : (isCurrent ? theme.accent : theme.accentBright))
+        : (isNext ? theme.accent : (isCurrent ? theme.accent.withOpacity(0.8) : theme.text));
     final cSub = isAccent ? theme.accent : theme.textMuted;
     final sp = time.split(' ');
     return Row(

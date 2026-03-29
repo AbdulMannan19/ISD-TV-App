@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -79,6 +80,11 @@ class ThemeService extends ChangeNotifier {
           decoration: BoxDecoration(gradient: grad),
         ));
       }
+      // Apply significant blur to soften gradients/circles on large displays (60"+)
+      layers.add(BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 40, sigmaY: 40),
+        child: Container(color: Colors.transparent),
+      ));
     }
 
     layers.add(SafeArea(child: child));

@@ -185,19 +185,33 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
     bool isNext = false,
   }) {
     // Background highlight only — no border, no badge
-    final rowBg  = isCurrent
-        ? theme.accent.withOpacity(0.14)
-        : isNext
-            ? theme.accent.withOpacity(0.06)
-            : Colors.transparent;
-    final nameFg = isCurrent ? theme.accentBright : theme.text;
+    final rowDecor = isNext
+        ? BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: theme.accent.withOpacity(0.18),
+            boxShadow: [
+              BoxShadow(
+                color: theme.accent.withOpacity(0.2),
+                blurRadius: 15,
+                spreadRadius: 2,
+              )
+            ],
+          )
+        : isCurrent
+            ? BoxDecoration(
+                borderRadius: BorderRadius.circular(10),
+                color: theme.accent.withOpacity(0.15),
+              )
+            : null;
+    final nameFg = isNext
+        ? theme.accentBright
+        : isCurrent
+            ? theme.accent
+            : theme.text;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 400),
-      decoration: BoxDecoration(
-        color: rowBg,
-        borderRadius: BorderRadius.circular(10),
-      ),
+      decoration: rowDecor,
       margin: const EdgeInsets.symmetric(vertical: 1),
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
@@ -208,22 +222,24 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               p['name']!,
               style: TextStyle(
                 color: nameFg,
-                fontWeight: FontWeight.bold,
+                fontWeight: isNext ? FontWeight.w900 : FontWeight.bold,
                 fontSize: 22,
                 letterSpacing: 1.5,
               ),
             ),
           ),
-          Expanded(flex: 3, child: _timeCell(p['adhan']!, theme)),
-          Expanded(flex: 3, child: _timeCell(p['iqamah']!, theme, isAccent: true)),
+          Expanded(flex: 3, child: _timeCell(p['adhan']!, theme, isNext: isNext, isCurrent: isCurrent)),
+          Expanded(flex: 3, child: _timeCell(p['iqamah']!, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent)),
         ],
       ),
     );
   }
 
-  Widget _timeCell(String time, ThemeConfig theme, {bool isAccent = false, bool dimmed = false}) {
+  Widget _timeCell(String time, ThemeConfig theme, {bool isAccent = false, bool dimmed = false, bool isNext = false, bool isCurrent = false}) {
     final sp = time.split(' ');
-    final primaryColor = isAccent ? theme.accentBright : theme.text;
+    final primaryColor = isAccent 
+        ? (isNext ? theme.accentBright : (isCurrent ? theme.accent : theme.accentBright))
+        : (isNext ? theme.accent : (isCurrent ? theme.accent.withOpacity(0.8) : theme.text));
     final secColor     = isAccent ? theme.accent : theme.textMuted;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
