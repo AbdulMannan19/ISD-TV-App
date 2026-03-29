@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../../supabase';
 import { ALL_THEMES } from '../../themes';
 import './EmbedPrayerTimes.css';
@@ -14,66 +14,107 @@ const to12 = (time) => {
     return `${hour}:${String(m).padStart(2, '0')} ${period}`;
 };
 
+const parseTimeMins = (timeStr) => {
+    if (!timeStr) return -1;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) {
+        const [time, period] = timeStr.trim().split(' ');
+        let [h, m] = time.split(':').map(Number);
+        if (period === 'PM' && h !== 12) h += 12;
+        if (period === 'AM' && h === 12) h = 0;
+        return h * 60 + m;
+    }
+    const [h, m] = timeStr.split(':').map(Number);
+    return h * 60 + m;
+};
+
+const formatDate = (dt) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return `${days[dt.getDay()]}, ${months[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
+};
+
 export default function EmbedPrayerTimes() {
+    const [currentTime, setCurrentTime] = useState(new Date());
     const [times, setTimes] = useState({});
     const [hijriDate, setHijriDate] = useState('');
     const [sunrise, setSunrise] = useState('');
     const [currentTheme, setCurrentTheme] = useState(null);
     const [loading, setLoading] = useState(true);
+    const isFetching = useRef(false);
 
-    useEffect(() => {
-        const fetchDb = async () => {
-            const { data } = await supabase.from('prayer_times').select('*');
-            if (data) {
-                const map = {};
-                data.forEach(row => { map[row.prayer] = row; });
-                setTimes(map);
-            }
-        };
-
-        const fetchTheme = async () => {
-            const { data } = await supabase.from('settings').select('theme_id').eq('id', 1).single();
-            if (data) {
-                const theme = ALL_THEMES.find(t => t.id === data.theme_id);
-                if (theme) setCurrentTheme(theme);
-            }
-        };
-
-        const fetchAladhan = async () => {
-            try {
-                const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
-                const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
-
-                const now = new Date();
-                const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
-                const apiUrl = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
-
-                const res = await fetch(apiUrl);
-                const json = await res.json();
-                if (json.code === 200 && json.data) {
-                    const hijri = json.data.date.hijri;
-                    const month = hijri.month.en || '';
-                    const dayNum = hijri.day || '';
-                    const year = hijri.year || '';
-                    setHijriDate(year ? `${month} ${dayNum}, ${year}` : `${month} ${dayNum}`);
-
-                    let rawSunrise = json.data.timings.Sunrise || '';
-                    if (rawSunrise) {
-                        rawSunrise = rawSunrise.split(' ')[0];
-                    }
-                    setSunrise(rawSunrise);
+    // 1. Unified stable data fetcher
+    const initData = useCallback(async () => {
+        if (isFetching.current) return;
+        isFetching.current = true;
+        try {
+            const fetchDb = async () => {
+                const { data } = await supabase.from('prayer_times').select('*');
+                if (data) {
+                    const map = {};
+                    data.forEach(row => { map[row.prayer] = row; });
+                    setTimes(map);
                 }
-            } catch (_) { }
-        };
+            };
 
-        const init = async () => {
+            const fetchTheme = async () => {
+                const { data } = await supabase.from('settings').select('theme_id').eq('id', 1).single();
+                if (data) {
+                    const theme = ALL_THEMES.find(t => t.id === data.theme_id);
+                    if (theme) setCurrentTheme(theme);
+                }
+            };
+
+            const fetchAladhan = async () => {
+                try {
+                    const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
+                    const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
+
+                    const now = new Date();
+                    const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+                    const apiUrl = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+
+                    const res = await fetch(apiUrl);
+                    const json = await res.json();
+                    if (json.code === 200 && json.data) {
+                        const hijri = json.data.date.hijri;
+                        const month = hijri.month.en || '';
+                        const dayNum = hijri.day || '';
+                        const year = hijri.year || '';
+                        setHijriDate(year ? `${month} ${dayNum}, ${year}` : `${month} ${dayNum}`);
+
+                        let rawSunrise = json.data.timings.Sunrise || '';
+                        if (rawSunrise) {
+                            rawSunrise = rawSunrise.split(' ')[0];
+                        }
+                        setSunrise(rawSunrise);
+                    }
+                } catch (_) { }
+            };
+
             await Promise.all([fetchDb(), fetchAladhan(), fetchTheme()]);
-            setLoading(false);
-        };
-        init();
+        } finally {
+            isFetching.current = false;
+        }
+    }, []);
 
+    // 2. Startup & Clock State
+    useEffect(() => {
+        initData().then(() => {
+            setLoading(false);
+        });
+
+        // 1-minute clock to keep highlights moving
+        const clockTimer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 60000);
+
+        return () => clearInterval(clockTimer);
+    }, [initData]);
+
+    // 3. Supabase Live Sync (Listen for configuration changes)
+    useEffect(() => {
         const channel = supabase.channel('embed-prayer-times')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'prayer_times' }, () => fetchDb())
+            .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'prayer_times' }, () => initData())
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'settings', filter: 'id=eq.1' }, (payload) => {
                 const newThemeId = payload.new.theme_id;
                 const theme = ALL_THEMES.find(t => t.id === newThemeId);
@@ -81,54 +122,91 @@ export default function EmbedPrayerTimes() {
             })
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
-    }, []);
+        return () => supabase.removeChannel(channel);
+    }, [initData]);
+
+    // 4. Schedule refreshes (triggered whenever 'times' is updated)
+    useEffect(() => {
+        if (Object.keys(times).length === 0) return;
+
+        const now = new Date();
+        const midnight = new Date(now.getFullYear(), now.month, now.getDate() + 1, 0, 1, 0);
+        const msToMidnight = midnight.getTime() - now.getTime();
+        
+        const midnightTimeout = setTimeout(() => {
+            initData();
+        }, msToMidnight);
+
+        // Maghrib/Sunset refresh
+        let maghribTimeout;
+        const maghribMins = parseTimeMins(times['maghrib']?.adhan);
+        if (maghribMins > 0) {
+            const maghrib = new Date(now.getFullYear(), now.month, now.getDate(), Math.floor(maghribMins / 60), (maghribMins % 60) + 1);
+            const msToMaghrib = maghrib.getTime() - now.getTime();
+            if (msToMaghrib > 0) {
+                maghribTimeout = setTimeout(() => initData(), msToMaghrib);
+            }
+        }
+
+        return () => {
+            clearTimeout(midnightTimeout);
+            if (maghribTimeout) clearTimeout(maghribTimeout);
+        };
+    }, [times, initData]);
 
     if (loading) return <div className="embed-loading">Loading...</div>;
 
-    const now = new Date();
-    const jummah = times['jummah'];
-
-    const parseTimeMins = (timeStr) => {
-        if (!timeStr) return -1;
-        if (timeStr.includes('AM') || timeStr.includes('PM')) {
-            const [time, period] = timeStr.trim().split(' ');
-            let [h, m] = time.split(':').map(Number);
-            if (period === 'PM' && h !== 12) h += 12;
-            if (period === 'AM' && h === 12) h = 0;
-            return h * 60 + m;
-        }
-        const [h, m] = timeStr.split(':').map(Number);
-        return h * 60 + m;
-    };
+    const jummahRow = times['jummah'];
 
     const getCurrentAndNextPrayer = () => {
         if (!times || Object.keys(times).length === 0) return { current: null, next: null };
 
-        const currentMins = now.getHours() * 60 + now.getMinutes();
+        const currentMins = currentTime.getHours() * 60 + currentTime.getMinutes();
+        const isFriday = currentTime.getDay() === 5;
 
-        const prayerMins = PRAYERS.map(p => {
+        // 1. Determine CURRENT (based on last adhan that passed)
+        const adhanMins = PRAYERS.map(p => {
             const t = times[p];
             if (!t || !t.adhan) return null;
             return { prayer: p, mins: parseTimeMins(t.adhan) };
         }).filter(Boolean);
-
-        prayerMins.sort((a, b) => a.mins - b.mins);
+        adhanMins.sort((a, b) => a.mins - b.mins);
 
         let current = null;
-        let next = null;
+        for (let i = 0; i < adhanMins.length; i++) {
+            if (currentMins >= adhanMins[i].mins) {
+                current = adhanMins[i].prayer;
+            }
+        }
+        // Midnight Logic: If before Fajr adhan, it's Isha from yesterday
+        if (!current && adhanMins.length > 0) {
+            current = adhanMins[adhanMins.length - 1].prayer;
+        }
 
-        for (let i = 0; i < prayerMins.length; i++) {
-            if (currentMins < prayerMins[i].mins) {
-                next = prayerMins[i].prayer;
-                current = i === 0 ? prayerMins[prayerMins.length - 1].prayer : prayerMins[i - 1].prayer;
+        // 2. Determine NEXT (based on first upcoming iqamah)
+        const iqamahCandidates = [...PRAYERS];
+        if (isFriday) {
+            if (times['jummah']) iqamahCandidates.push('jummah');
+            if (times['jummah_2']) iqamahCandidates.push('jummah_2');
+        }
+
+        const iqamahMins = iqamahCandidates.map(p => {
+            const t = times[p];
+            if (!t || !t.iqamah) return null;
+            return { prayer: p, mins: parseTimeMins(t.iqamah) };
+        }).filter(Boolean);
+        iqamahMins.sort((a, b) => a.mins - b.mins);
+
+        let next = null;
+        for (let i = 0; i < iqamahMins.length; i++) {
+            if (currentMins < iqamahMins[i].mins) {
+                next = iqamahMins[i].prayer;
                 break;
             }
         }
-
-        if (!next && prayerMins.length > 0) {
-            current = prayerMins[prayerMins.length - 1].prayer;
-            next = prayerMins[0].prayer;
+        // If all iqamahs passed today, next is Fajr tomorrow
+        if (!next && iqamahMins.length > 0) {
+            next = iqamahMins[0].prayer;
         }
 
         return { current, next };
@@ -150,7 +228,7 @@ export default function EmbedPrayerTimes() {
                 <div className="embed-header">
                     <div className="embed-title">Prayer Times</div>
                     <div className="embed-subtitle">Islamic Society of Denton</div>
-                    <div className="embed-date">{formatDate(now)}</div>
+                    <div className="embed-date">{formatDate(currentTime)}</div>
                     {hijriDate && <div className="embed-hijri">{hijriDate}</div>}
                 </div>
 
@@ -176,7 +254,7 @@ export default function EmbedPrayerTimes() {
                             const row = (
                                 <tr key={p} className={rowClass}>
                                     <td className="embed-prayer-name">{LABELS[p]}</td>
-                                    <td>{to12(t.adhan)}</td>
+                                    <td className="embed-adhan">{to12(t.adhan)}</td>
                                     <td className="embed-iqamah">{to12(t.iqamah)}</td>
                                 </tr>
                             );
@@ -196,10 +274,10 @@ export default function EmbedPrayerTimes() {
                     </tbody>
                 </table>
 
-                {jummah && (
-                    <div className="embed-jummah">
+                {jummahRow && (
+                    <div className={`embed-jummah ${current === 'jummah' ? 'embed-current-prayer' : next === 'jummah' ? 'embed-next-prayer' : ''}`}>
                         <span className="embed-jummah-label">Jumu'ah</span>
-                        <span className="embed-jummah-time">{to12(jummah.iqamah)}</span>
+                        <span className="embed-jummah-time">{to12(jummahRow.iqamah)}</span>
                     </div>
                 )}
             </div>
@@ -207,8 +285,3 @@ export default function EmbedPrayerTimes() {
     );
 }
 
-function formatDate(dt) {
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    return `${days[dt.getDay()]}, ${months[dt.getMonth()]} ${dt.getDate()}, ${dt.getFullYear()}`;
-}

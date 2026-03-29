@@ -157,34 +157,32 @@
 }
 
 /* Premium Highlight Styles for Current and Next Prayers */
-.embed-current-prayer td {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%) !important;
-  color: var(--theme-text, #fffaec) !important;
+/* Premium Highlight Styles for Current and Next Prayers - Matching Flutter Logic */
+.embed-current-prayer, .embed-current-prayer td {
+  background-color: color-mix(in srgb, var(--theme-accent), transparent 85%) !important;
+  color: var(--theme-accent) !important; 
   font-weight: 600 !important;
 }
 
-.embed-current-prayer td:first-child {
-  box-shadow: inset 4px 0 0 0 var(--theme-text, #fffaec);
+.embed-current-prayer .embed-prayer-name,
+.embed-current-prayer .embed-jummah-label {
+  color: var(--theme-accent) !important;
 }
 
-.embed-current-prayer .embed-prayer-name {
-  color: var(--theme-text, #fffaec) !important;
-  font-weight: 600 !important;
+.embed-next-prayer, .embed-next-prayer td {
+  background-color: color-mix(in srgb, var(--theme-accent), transparent 82%) !important;
+  box-shadow: 0 0 12px 1px color-mix(in srgb, var(--theme-accent), transparent 80%) !important;
+  color: var(--theme-accent-bright) !important;
+  font-weight: 900 !important;
+  z-index: 1;
+  position: relative;
 }
 
-.embed-next-prayer td {
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0%, transparent 100%) !important;
-  color: var(--theme-accent, #f0c878) !important;
-  font-weight: 600 !important;
-}
-
-.embed-next-prayer td:first-child {
-  box-shadow: inset 4px 0 0 0 var(--theme-accent, #f0c878);
-}
-
-.embed-next-prayer .embed-prayer-name {
-  color: var(--theme-accent, #f0c878) !important;
-  font-weight: 600 !important;
+.embed-next-prayer .embed-prayer-name,
+.embed-next-prayer .embed-jummah-label,
+.embed-next-prayer .embed-jummah-time {
+  color: var(--theme-accent-bright) !important;
+  font-weight: 900 !important;
 }
 
 /* Make it fit on smaller mobile screens without horizontal overflow */
