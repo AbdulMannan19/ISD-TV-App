@@ -64,18 +64,12 @@ Future<void> main() async {
   
   try {
     await dotenv.load(fileName: ".env");
-    
     await Supabase.initialize(
       url: dotenv.env['SUPABASE_URL']?.trim() ?? '',
       anonKey: dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '',
     );
-
-    // Initialize core services
-    await SharedData.instance.init();
-    await SharedData.instance.fetchDailyContent();
-    await ThemeService().init();
   } catch (e) {
-    debugPrint("Initialization error: $e");
+    debugPrint("Supabase init error: $e");
   }
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -107,9 +101,131 @@ class DisplayApp extends StatelessWidget {
             useMaterial3: true, 
             fontFamily: 'Roboto',
           ),
-          home: const ScreenRotator(),
+          home: const StartupGate(),
         );
       },
+    );
+  }
+}
+
+class StartupGate extends StatefulWidget {
+  const StartupGate({super.key});
+
+  @override
+  State<StartupGate> createState() => _StartupGateState();
+}
+
+class _StartupGateState extends State<StartupGate> {
+  bool _initialized = false;
+  String _status = "Initializing system...";
+  int _retryCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _startInitialization();
+  }
+
+  Future<void> _startInitialization() async {
+    while (mounted && !_initialized) {
+      try {
+        setState(() => _status = _retryCount == 0 ? "Connecting to network..." : "Network sync retry #$_retryCount...");
+        
+        // 1. Theme Service should be localized/fast
+        await ThemeService().init();
+        
+        // 2. Shared Data (Prayer times from API/DB) - The most likely point of failure if offline
+        final success = await SharedData.instance.init();
+        if (success) {
+          // 3. Daily Content
+          await SharedData.instance.fetchDailyContent();
+          
+          // 4. Scheduled changes
+          try {
+            await IqamahScheduleService.applyScheduledChanges();
+          } catch (_) {}
+
+          if (mounted) {
+            setState(() {
+              _initialized = true;
+              _status = "Synchronized";
+            });
+          }
+          return;
+        }
+      } catch (e) {
+        debugPrint("Startup attempt $_retryCount failed: $e");
+      }
+
+      _retryCount++;
+      // Exponential backoff or steady retry every 3s
+      await Future.delayed(const Duration(seconds: 3));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_initialized) return const ScreenRotator();
+
+    return Scaffold(
+      backgroundColor: const Color(0xFF000428),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Branded Mosque Logo
+            Container(
+              width: 150,
+              height: 150,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.white.withAlpha(20),
+                    blurRadius: 40,
+                    spreadRadius: 5,
+                  ),
+                ],
+              ),
+              child: ClipOval(
+                child: Image.asset(
+                  'assets/images/app_icon.jpeg',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => 
+                      const Icon(Icons.mosque, size: 80, color: Colors.white70),
+                ),
+              ),
+            ),
+            const SizedBox(height: 30),
+            const CircularProgressIndicator(
+              color: Colors.white,
+              strokeWidth: 3,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              _status,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 16,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w300,
+              ),
+            ),
+            if (_retryCount > 10) ...[
+              const SizedBox(height: 40),
+              TextButton(
+                onPressed: () {
+                  setState(() {
+                    _retryCount = 0;
+                    _startInitialization();
+                  });
+                },
+                child: const Text("Retry Now", style: TextStyle(color: Colors.white)),
+              ),
+            ]
+          ],
+        ),
+      ),
     );
   }
 }

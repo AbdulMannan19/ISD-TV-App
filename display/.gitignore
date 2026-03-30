@@ -48,3 +48,10 @@ app.*.map.json
 windows/flutter/generated_plugin_registrant.cc
 windows/flutter/generated_plugin_registrant.h
 windows/flutter/generated_plugins.cmake
+
+temp_boot/
+bootanimation.zip
+create_boot_zip.py
+backup_masjidal_boot.zip
+create_backup_boot_zip.py
+create_boot_zip.ps1

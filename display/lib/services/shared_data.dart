@@ -30,14 +30,19 @@ class SharedData {
 
   bool _isFetching = false;
 
-  Future<void> init() async {
-    if (_isFetching) return;
+  Future<bool> init() async {
+    if (_isFetching) return false;
     _isFetching = true;
     try {
-      await _fetchFromApi();
+      final success = await _fetchFromApi();
+      if (!success) return false;
+      
       await _loadIqamahFromDb();
       _calculateLastThird();
       _computeNextTarget();
+      return true;
+    } catch (_) {
+      return false;
     } finally {
       _isFetching = false;
     }
@@ -128,21 +133,26 @@ class SharedData {
     } catch (_) {}
   }
 
-  Future<void> _fetchFromApi() async {
-    final data = await PrayerTimesService().fetchPrayerTimes();
-    if (data == null) return;
-    sunrise = data['sunrise'] as String;
-    sunset = data['sunset'] as String;
-    jummah = data['jummah'] as String;
-    hijriDate = data['hijriDate'] as String;
-    hijriMonth = data['hijriMonth'] as int;
-    hijriDay = data['hijriDay'] as int;
-    prayers = (data['prayers'] as List).map((p) => {
-      'name': p['name'] as String,
-      'adhan': p['adhan'] as String,
-      'iqamah': p['iqamah'] as String,
-    }).toList();
-    _calculateLastThird();
+  Future<bool> _fetchFromApi() async {
+    try {
+      final data = await PrayerTimesService().fetchPrayerTimes();
+      if (data == null) return false;
+      sunrise = data['sunrise'] as String;
+      sunset = data['sunset'] as String;
+      jummah = data['jummah'] as String;
+      hijriDate = data['hijriDate'] as String;
+      hijriMonth = data['hijriMonth'] as int;
+      hijriDay = data['hijriDay'] as int;
+      prayers = (data['prayers'] as List).map((p) => {
+        'name': p['name'] as String,
+        'adhan': p['adhan'] as String,
+        'iqamah': p['iqamah'] as String,
+      }).toList();
+      _calculateLastThird();
+      return prayers.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   String lastThird = '--';
