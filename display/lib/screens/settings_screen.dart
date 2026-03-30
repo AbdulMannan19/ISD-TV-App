@@ -164,7 +164,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(color: theme.textMuted, fontSize: 14)),
                         const SizedBox(height: 32),
                         _buildUpdateSection(theme),
-                        if (Platform.isAndroid && !kIsWeb) ...[
+                        if (!kIsWeb) ...[
                           const SizedBox(height: 24),
                           Divider(color: theme.text.withOpacity(0.1)),
                           const SizedBox(height: 24),
@@ -178,14 +178,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 theme, 
                                 icon: Icons.home, 
                                 label: 'Android Home', 
-                                onTap: NavigationService.goHome,
+                                onTap: () {
+                                  if (Platform.isAndroid) {
+                                    NavigationService.goHome();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Android Home is only available on the TV box.'))
+                                    );
+                                  }
+                                },
                               ),
                               const SizedBox(width: 12),
                               _maintenanceButton(
                                 theme, 
                                 icon: Icons.settings, 
                                 label: 'Android Settings', 
-                                onTap: NavigationService.openSettings,
+                                onTap: () {
+                                  if (Platform.isAndroid) {
+                                    NavigationService.openSettings();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Android Settings is only available on the TV box.'))
+                                    );
+                                  }
+                                },
                               ),
                             ],
                           ),
