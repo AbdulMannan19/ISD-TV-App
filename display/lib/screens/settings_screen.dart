@@ -7,6 +7,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:apk_sideload/install_apk.dart';
 import '../services/theme_service.dart';
 import '../theme/theme_config.dart';
+import '../services/navigation_service.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -162,6 +164,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           style: TextStyle(color: theme.textMuted, fontSize: 14)),
                         const SizedBox(height: 32),
                         _buildUpdateSection(theme),
+                        if (Platform.isAndroid && !kIsWeb) ...[
+                          const SizedBox(height: 24),
+                          Divider(color: theme.text.withOpacity(0.1)),
+                          const SizedBox(height: 24),
+                          Text('System Maintenance',
+                            style: TextStyle(color: theme.text.withOpacity(0.5), fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              _maintenanceButton(
+                                theme, 
+                                icon: Icons.home, 
+                                label: 'Android Home', 
+                                onTap: NavigationService.goHome,
+                              ),
+                              const SizedBox(width: 12),
+                              _maintenanceButton(
+                                theme, 
+                                icon: Icons.settings, 
+                                label: 'Android Settings', 
+                                onTap: NavigationService.openSettings,
+                              ),
+                            ],
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -266,6 +294,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         side: BorderSide(color: theme.text.withOpacity(0.2)),
+      ),
+    );
+  }
+
+  Widget _maintenanceButton(ThemeConfig theme, {required IconData icon, required String label, required VoidCallback onTap}) {
+    return Expanded(
+      child: OutlinedButton.icon(
+        onPressed: onTap,
+        icon: Icon(icon, size: 18),
+        label: Text(label, style: const TextStyle(fontSize: 13)),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: theme.textMuted,
+          side: BorderSide(color: theme.text.withOpacity(0.15)),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       ),
     );
   }
