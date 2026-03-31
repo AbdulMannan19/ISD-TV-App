@@ -13,13 +13,6 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
             when (call.method) {
-                "goHome" -> {
-                    val intent = Intent(Intent.ACTION_MAIN)
-                    intent.addCategory(Intent.CATEGORY_HOME)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    startActivity(intent)
-                    result.success(null)
-                }
                 "openSettings" -> {
                     val intent = Intent(Settings.ACTION_SETTINGS)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK

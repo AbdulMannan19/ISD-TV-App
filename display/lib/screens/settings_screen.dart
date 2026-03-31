@@ -176,21 +176,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               _maintenanceButton(
                                 theme, 
-                                icon: Icons.home, 
-                                label: 'Android Home', 
-                                onTap: () {
-                                  if (Platform.isAndroid) {
-                                    NavigationService.goHome();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Android Home is only available on the TV box.'))
-                                    );
-                                  }
-                                },
-                              ),
-                              const SizedBox(width: 12),
-                              _maintenanceButton(
-                                theme, 
                                 icon: Icons.settings, 
                                 label: 'Android Settings', 
                                 onTap: () {
