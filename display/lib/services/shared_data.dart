@@ -125,12 +125,17 @@ class SharedData {
     } catch (_) {}
   }
 
-  Future<void> fetchDailyContent() async {
+  Future<bool> fetchDailyContent() async {
     try {
       currentHadith = await DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}).getTodaysContent();
       currentDua = await DailyContentService(tableName: 'duas', fallback: {'text': '', 'source': ''}).getTodaysContent();
       currentVerse = await DailyContentService(tableName: 'verses', fallback: {'text': '', 'source': ''}).getTodaysContent();
-    } catch (_) {}
+      
+      // Validation: Ensure at least the Hadith is loaded (the most prominent dashboard element)
+      return currentHadith['text']!.isNotEmpty;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> _fetchFromApi() async {

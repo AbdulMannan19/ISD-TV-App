@@ -129,29 +129,32 @@ class _StartupGateState extends State<StartupGate> {
   Future<void> _startInitialization() async {
     while (mounted && !_initialized) {
       try {
-        setState(() => _status = _retryCount == 0 ? "Connecting to network..." : "Network sync retry #$_retryCount...");
+        setState(() => _status = _retryCount == 0 ? "Syncing Prayer Times..." : "Network sync retry #$_retryCount...");
         
         // 1. Theme Service should be localized/fast
         await ThemeService().init();
         
-        // 2. Shared Data (Prayer times from API/DB) - The most likely point of failure if offline
-        final success = await SharedData.instance.init();
-        if (success) {
+        // 2. Shared Data (Prayer times from API/DB)
+        final prayerSuccess = await SharedData.instance.init();
+        if (prayerSuccess) {
           // 3. Daily Content
-          await SharedData.instance.fetchDailyContent();
+          setState(() => _status = "Fetching Daily Content...");
+          final contentSuccess = await SharedData.instance.fetchDailyContent();
           
-          // 4. Scheduled changes
-          try {
-            await IqamahScheduleService.applyScheduledChanges();
-          } catch (_) {}
+          if (contentSuccess) {
+            // 4. Scheduled changes
+            try {
+              await IqamahScheduleService.applyScheduledChanges();
+            } catch (_) {}
 
-          if (mounted) {
-            setState(() {
-              _initialized = true;
-              _status = "Synchronized";
-            });
+            if (mounted) {
+              setState(() {
+                _initialized = true;
+                _status = "Synchronized";
+              });
+            }
+            return;
           }
-          return;
         }
       } catch (e) {
         debugPrint("Startup attempt $_retryCount failed: $e");
