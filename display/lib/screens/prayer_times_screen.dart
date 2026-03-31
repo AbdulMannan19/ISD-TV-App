@@ -176,27 +176,39 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         ),
       ),
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
+        alignment: Alignment.center,
         children: [
-          Text(
-            "JUMU'AH",
-            style: TextStyle(
-              color: isHighlighted ? highlightMain : theme.text,
-              fontWeight: highlightWeight,
-              fontSize: 15,
-              letterSpacing: 3,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                "JUMU'AH",
+                style: TextStyle(
+                  color: isHighlighted ? highlightMain : theme.text,
+                  fontWeight: highlightWeight,
+                  fontSize: 22,
+                  letterSpacing: 1.5,
+                ),
+              ),
+              const SizedBox(width: 20),
+              _subscriptTime(
+                SharedData.instance.jummah, 
+                28, 
+                highlightWeight, 
+                theme, 
+                isAccent: true,
+                isNext: isNext,
+                isCurrent: isCurrent,
+              ),
+            ],
           ),
-          const SizedBox(width: 20),
-          _subscriptTime(
-            SharedData.instance.jummah, 
-            28, 
-            highlightWeight, 
-            theme, 
-            isAccent: true,
-            isNext: isNext,
-            isCurrent: isCurrent,
+          Positioned(
+            right: 0,
+            child: GestureDetector(
+              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+              child: Icon(Icons.mosque, size: 28, color: theme.marker.withOpacity(0.5)),
+            ),
           ),
         ],
       ),
@@ -224,6 +236,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
             flex: 2,
@@ -254,8 +267,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         : (isAccent ? theme.accent : theme.textMuted);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         Text(
           sp[0],
@@ -376,11 +388,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               _sunInfo('SUNSET', SharedData.instance.sunset, theme),
               _sunInfo('LAST THIRD', SharedData.instance.lastThird, theme),
             ],
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-            child: Icon(Icons.mosque, size: 28, color: theme.marker.withOpacity(0.5)),
           ),
         ],
       ),
