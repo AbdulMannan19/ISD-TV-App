@@ -185,7 +185,7 @@ class _ContentScreenState extends State<ContentScreen> {
               Text(shared.hijriDate, textAlign: TextAlign.center,
                 style: TextStyle(color: theme.textMuted.withOpacity(0.8), fontSize: 12, letterSpacing: 0.5)),
           ]),
-          const Spacer(),
+          const SizedBox(height: 8),
           _buildClock(theme),
           const SizedBox(height: 10),
           Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [
@@ -253,11 +253,6 @@ class _ContentScreenState extends State<ContentScreen> {
             Container(width: 1, height: 44, color: theme.textMuted.withOpacity(0.3), margin: const EdgeInsets.symmetric(horizontal: 10)),
             _jumuahBarItem(shared.jummah, theme),
           ],
-          const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-            child: Icon(Icons.mosque, size: 24, color: theme.marker.withOpacity(0.5)),
-          ),
         ],
       ),
     );
@@ -335,17 +330,27 @@ class _ContentScreenState extends State<ContentScreen> {
       duration: const Duration(milliseconds: 400),
       padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       decoration: rowDecor,
-      child: Column(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text("JUMU'AH", 
-            style: TextStyle(
-              color: isHighlighted ? highlightMain : theme.text, 
-              fontSize: 16, 
-              fontWeight: highlightWeight, 
-              letterSpacing: 1,
-            )),
-          _subscriptTime(time, 20, highlightWeight, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text("JUMU'AH", 
+                style: TextStyle(
+                  color: isHighlighted ? highlightMain : theme.text, 
+                  fontSize: 18, 
+                  fontWeight: highlightWeight, 
+                  letterSpacing: 1,
+                )),
+              _subscriptTime(time, 20, highlightWeight, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
+            ],
+          ),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+            child: Icon(Icons.mosque, size: 24, color: theme.marker.withOpacity(0.5)),
+          ),
         ],
       ),
     );
