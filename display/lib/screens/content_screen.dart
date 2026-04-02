@@ -208,7 +208,7 @@ class _ContentScreenState extends State<ContentScreen> {
                 style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2)),
               const SizedBox(height: 6),
               Text(shared.getCountdown(),
-                style: TextStyle(color: theme.accentBright, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                style: TextStyle(color: theme.accentBright, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 1)),
             ]),
           ),
         ],

@@ -240,18 +240,23 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
         children: [
           Expanded(
             flex: 2,
-            child: Text(
-              p['name']!,
-              style: TextStyle(
-                color: nameFg,
-                fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.bold),
-                fontSize: 22,
-                letterSpacing: 1.5,
+            child: Center(
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  p['name']!,
+                  style: TextStyle(
+                    color: nameFg,
+                    fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.bold),
+                    fontSize: 22,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ),
             ),
           ),
-          Expanded(flex: 3, child: _timeCell(p['adhan']!, theme, isNext: isNext, isCurrent: isCurrent)),
-          Expanded(flex: 3, child: _timeCell(p['iqamah']!, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent)),
+          Expanded(flex: 3, child: Center(child: _timeCell(p['adhan']!, theme, isNext: isNext, isCurrent: isCurrent))),
+          Expanded(flex: 3, child: Center(child: _timeCell(p['iqamah']!, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent))),
         ],
       ),
     );
@@ -405,7 +410,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp[0],
           style: TextStyle(
             color: theme.text,
-            fontSize: 54,
+            fontSize: 58,
             fontWeight: FontWeight.w700,
             letterSpacing: -1,
           ),

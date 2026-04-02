@@ -17,9 +17,11 @@ import 'services/display_mode_service.dart';
 import 'services/alert_service.dart';
 import 'services/iqamah_schedule_service.dart';
 import 'services/theme_service.dart';
+import 'services/navigation_service.dart';
 import 'test/test_controls.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 
 /// Permanent self-healing logic to prevent startup crashes due to corrupted storage.
 Future<void> _performStorageHealthCheck() async {
@@ -172,62 +174,76 @@ class _StartupGateState extends State<StartupGate> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF000428),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // Branded Mosque Logo
-            Container(
-              width: 150,
-              height: 150,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withAlpha(20),
-                    blurRadius: 40,
-                    spreadRadius: 5,
+      body: Stack(
+        children: [
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Branded Mosque Logo
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withAlpha(20),
+                        blurRadius: 40,
+                        spreadRadius: 5,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: ClipOval(
-                child: Image.asset(
-                  'assets/images/app_icon.jpeg',
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => 
-                      const Icon(Icons.mosque, size: 80, color: Colors.white70),
+                  child: ClipOval(
+                    child: Image.asset(
+                      'assets/images/app_icon.jpeg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => 
+                          const Icon(Icons.mosque, size: 80, color: Colors.white70),
+                    ),
+                  ),
                 ),
+                const SizedBox(height: 30),
+                const CircularProgressIndicator(
+                  color: Colors.white,
+                  strokeWidth: 3,
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  _status,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                if (_retryCount > 10) ...[
+                  const SizedBox(height: 40),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _retryCount = 0;
+                        _startInitialization();
+                      });
+                    },
+                    child: const Text("Retry Now", style: TextStyle(color: Colors.white)),
+                  ),
+                ]
+              ],
+            ),
+          ),
+          if (!kIsWeb && Platform.isAndroid)
+            Positioned(
+              top: 24,
+              right: 24,
+              child: IconButton(
+                onPressed: () => NavigationService.openSettings(),
+                icon: const Icon(Icons.settings, color: Colors.white38, size: 28),
+                tooltip: 'Android Settings',
               ),
             ),
-            const SizedBox(height: 30),
-            const CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 3,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              _status,
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-            if (_retryCount > 10) ...[
-              const SizedBox(height: 40),
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _retryCount = 0;
-                    _startInitialization();
-                  });
-                },
-                child: const Text("Retry Now", style: TextStyle(color: Colors.white)),
-              ),
-            ]
-          ],
-        ),
+        ],
       ),
     );
   }
