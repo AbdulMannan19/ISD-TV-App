@@ -94,6 +94,7 @@ class _ContentScreenState extends State<ContentScreen> {
           child: Column(
             children: [
               Expanded(
+                flex: 8,
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
@@ -106,7 +107,10 @@ class _ContentScreenState extends State<ContentScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              _buildPrayerBar(theme),
+              Expanded(
+                flex: 2,
+                child: _buildPrayerBar(theme),
+              ),
             ],
           ),
         ),
@@ -178,16 +182,16 @@ class _ContentScreenState extends State<ContentScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(border: Border.all(color: theme.text.withOpacity(0.2)), borderRadius: BorderRadius.circular(8)),
               child: Text('Islamic Society of Denton', textAlign: TextAlign.center,
-                style: TextStyle(color: theme.accentBright, fontSize: 14, fontWeight: FontWeight.w600)),
+                style: TextStyle(color: theme.accentBright, fontSize: 16, fontWeight: FontWeight.w600)),
             ),
             const SizedBox(height: 8),
             Text(_formatDate(_now), textAlign: TextAlign.center,
-              style: TextStyle(color: theme.textMuted, fontSize: 14, letterSpacing: 0.5)),
+              style: TextStyle(color: theme.textMuted, fontSize: 15, letterSpacing: 0.5)),
             if (shared.hijriDate.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(shared.hijriDate, textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.textMuted.withOpacity(0.8), fontSize: 13, letterSpacing: 0.5)),
+                  style: TextStyle(color: theme.textMuted.withOpacity(0.8), fontSize: 14, letterSpacing: 0.5)),
               ),
           ]),
           // Clock
@@ -205,10 +209,10 @@ class _ContentScreenState extends State<ContentScreen> {
             decoration: BoxDecoration(color: theme.accent.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
             child: Column(children: [
               Text('${shared.getNextPrayerName()} IQAMA IN',
-                style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 2)),
+                style: TextStyle(color: theme.textMuted, fontSize: 16, fontWeight: FontWeight.w700, letterSpacing: 2)),
               const SizedBox(height: 6),
               Text(shared.getCountdown(),
-                style: TextStyle(color: theme.accentBright, fontSize: 32, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                style: TextStyle(color: theme.accentBright, fontSize: 36, fontWeight: FontWeight.bold, letterSpacing: 1)),
             ]),
           ),
         ],
@@ -224,11 +228,11 @@ class _ContentScreenState extends State<ContentScreen> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(sp[0],
-          style: TextStyle(color: theme.text, fontSize: 54, fontWeight: FontWeight.w700, letterSpacing: -1)),
+          style: TextStyle(color: theme.text, fontSize: 58, fontWeight: FontWeight.w700, letterSpacing: -1)),
         Padding(
           padding: const EdgeInsets.only(bottom: 6, left: 4),
           child: Text(sp.length > 1 ? sp[1] : '',
-            style: TextStyle(color: theme.textMuted, fontSize: 18, fontWeight: FontWeight.w500)),
+            style: TextStyle(color: theme.textMuted, fontSize: 20, fontWeight: FontWeight.w500)),
         ),
       ],
     );
@@ -245,6 +249,7 @@ class _ContentScreenState extends State<ContentScreen> {
         border: Border.all(color: theme.text.withOpacity(0.08)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _prayerBarHeader(theme),
           const SizedBox(width: 16),
@@ -266,11 +271,26 @@ class _ContentScreenState extends State<ContentScreen> {
   Widget _prayerBarHeader(ThemeConfig theme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const SizedBox(height: 20),
-        Text('STARTS', style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        // Matches prayer name (fontSize 18) + SizedBox(height: 4)
+        SizedBox(height: 18 * 1.2, child: const SizedBox()), // line-height placeholder for name
         const SizedBox(height: 4),
-        Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        SizedBox(
+          height: 20 * 1.2, // matches adhan time line height
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text('STARTS', style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+          ),
+        ),
+        const SizedBox(height: 2),
+        SizedBox(
+          height: 20 * 1.2, // matches iqamah time line height
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+          ),
+        ),
       ],
     );
   }
@@ -306,8 +326,9 @@ class _ContentScreenState extends State<ContentScreen> {
               fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.w700),
               letterSpacing: 1,
             )),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           _subscriptTime(p['adhan']!,  20, FontWeight.w700, theme, isNext: isNext, isCurrent: isCurrent),
+          const SizedBox(height: 2),
           _subscriptTime(p['iqamah']!, 20, FontWeight.w700, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
         ],
       ),
@@ -363,9 +384,9 @@ class _ContentScreenState extends State<ContentScreen> {
 
   Widget _sunInfo(String label, String time, ThemeConfig theme) {
     return Column(children: [
-      Text(label, style: TextStyle(color: theme.textMuted, fontSize: 12, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
+      Text(label, style: TextStyle(color: theme.textMuted, fontSize: 13, letterSpacing: 1.5, fontWeight: FontWeight.w600)),
       const SizedBox(height: 2),
-      _subscriptTime(time, 22, FontWeight.w600, theme),
+      _subscriptTime(time, 24, FontWeight.w600, theme),
     ]);
   }
 
