@@ -125,12 +125,35 @@ class SharedData {
     } catch (_) {}
   }
 
+  // Hardcoded Friday hadiths — one is picked randomly each Friday
+  static const _fridayHadiths = [
+    {
+      'text': 'Narrated Salman Al-Farsi: The Prophet (p.b.u.h) said, "Whoever takes a bath on Friday, purifies himself as much as he can, then uses his (hair) oil or perfumes himself with the scent of his house, then proceeds (for the Jumua prayer) and does not separate two persons sitting together (in the mosque), then prays as much as (Allah has) written for him and then remains silent while the Imam is delivering the Khutba, his sins in-between the present and the last Friday would be forgiven."',
+      'source': 'Sahih Bukhari - 8, Friday: Etiquettes',
+    },
+    {
+      'text': 'Ibn Umar (may Allah be pleased with him) said: "The Messenger of Allah (peace and blessings of Allah be upon him) said: \'Whoever reads Surat al-Kahf on the day of Jumu\'ah, a light will shine for him from beneath his feet to the clouds of the sky, which will shine for him on the Day of Resurrection, and he will be forgiven (his sins) between the two Fridays.\'"',
+      'source': 'al-Sunan al-Kubra lil-Bayhaqi 5996',
+    },
+    {
+      'text': 'Aws b. Aws reported the Messenger of Allah as saying: Among the most excellent of your days is Friday; so invoke many blessings on me on that day, for your blessing will be submitted to me. They (the Companions) asked: Messenger of Allah, how can our blessings be submitted to you, when your body has decayed? He said: Allah has prohibited the earth from consuming the bodies of Prophets.',
+      'source': 'Sunan Abi Dawud 1531',
+    },
+  ];
+
   Future<bool> fetchDailyContent() async {
     try {
       currentHadith = await DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}, fetchSecondContent: true).getTodaysContent();
       currentDua = await DailyContentService(tableName: 'duas', fallback: {'text': '', 'source': ''}).getTodaysContent();
       currentVerse = await DailyContentService(tableName: 'verses', fallback: {'text': '', 'source': ''}).getTodaysContent();
       
+      // On Fridays, override the second hadith with a random Friday hadith
+      if (now.weekday == DateTime.friday) {
+        final fridayHadith = _fridayHadiths[(now.day * now.month * 7) % _fridayHadiths.length];
+        currentHadith['text2'] = fridayHadith['text']!;
+        currentHadith['source2'] = fridayHadith['source']!;
+      }
+
       // Validation: Ensure at least the Hadith is loaded (the most prominent dashboard element)
       return currentHadith['text']!.isNotEmpty;
     } catch (_) {
