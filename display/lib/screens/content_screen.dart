@@ -69,10 +69,12 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   double _dynamicFontSize(int length) {
-    if (length < 100) return 38;
-    if (length < 200) return 34;
-    if (length < 400) return 30;
-    return 26;
+    if (length < 80)  return 36;
+    if (length < 150) return 32;
+    if (length < 250) return 28;
+    if (length < 400) return 24;
+    if (length < 600) return 20;
+    return 17;
   }
 
   @override
@@ -119,10 +121,10 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   Widget _buildDefaultContent(ThemeConfig theme) {
-    // Content cards always keep their original parchment + golden styling
-    // regardless of the active theme — only the surrounding background changes.
-    final cardBg = widget.contentBgColor;       // default: 0xFFFAF6F0 cream
-    final cardText = widget.contentTextColor;    // default: 0xFF8B6914 golden
+    final cardBg   = widget.contentBgColor;
+    final cardText = widget.contentTextColor;
+    final text     = content!['text']!;
+    final source   = content!['source']!;
     return Container(
       decoration: BoxDecoration(
         color: cardBg,
@@ -130,34 +132,36 @@ class _ContentScreenState extends State<ContentScreen> {
       ),
       padding: const EdgeInsets.all(15),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(widget.title,
             textAlign: TextAlign.center,
             style: TextStyle(color: cardText.withOpacity(0.7),
-              fontSize: 24, fontWeight: FontWeight.w700, letterSpacing: 3)),
-          const SizedBox(height: 12),
+              fontSize: 22, fontWeight: FontWeight.w700, letterSpacing: 2)),
+          const SizedBox(height: 8),
           Expanded(
             child: Center(
-              child: SingleChildScrollView(
-                child: Text(content!['text']!,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: cardText,
-                    fontSize: _dynamicFontSize(content!['text']!.length), fontWeight: FontWeight.w400, height: 1.6, letterSpacing: 0.3)),
-              ),
+              child: Text(text,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: cardText,
+                  fontSize: _dynamicFontSize(text.length),
+                  fontWeight: FontWeight.w400,
+                  height: 1.5,
+                  letterSpacing: 0.3)),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
               color: cardText.withOpacity(0.12),
               borderRadius: BorderRadius.circular(8)),
-            child: Text(content!['source']!,
+            child: Text(source,
               textAlign: TextAlign.center,
               style: TextStyle(color: cardText.withOpacity(0.8),
-                fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           ),
         ],
       ),
@@ -186,12 +190,12 @@ class _ContentScreenState extends State<ContentScreen> {
             ),
             const SizedBox(height: 8),
             Text(_formatDate(_now), textAlign: TextAlign.center,
-              style: TextStyle(color: theme.accentBright, fontSize: 16, letterSpacing: 0.5, fontWeight: FontWeight.w600)),
+              style: TextStyle(color: theme.accentBright, fontSize: 16, letterSpacing: 0.5)),
             if (shared.hijriDate.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 4),
                 child: Text(shared.hijriDate, textAlign: TextAlign.center,
-                  style: TextStyle(color: theme.accentBright, fontSize: 18, letterSpacing: 0.5, fontWeight: FontWeight.w600)),
+                  style: TextStyle(color: theme.accentBright, fontSize: 18, letterSpacing: 0.5)),
               ),
           ]),
           // Clock

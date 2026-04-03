@@ -54,7 +54,7 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
         color: cardBg,
         borderRadius: BorderRadius.circular(20),
       ),
-      padding: const EdgeInsets.fromLTRB(36, 12, 36, 36),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -62,55 +62,48 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
           Text('PROHIBITED TIME FOR VOLUNTARY SALAH',
             textAlign: TextAlign.center,
             style: TextStyle(color: accent.withOpacity(0.8),
-              fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: 3)),
+              fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: 2)),
           const SizedBox(height: 4),
           Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('$_remainingMinutes',
-                      style: const TextStyle(color: accent,
-                        fontSize: 72, fontWeight: FontWeight.w700, height: 1)),
-                    const SizedBox(height: 4),
-                    Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('$_remainingMinutes',
+                    style: const TextStyle(color: accent,
+                      fontSize: 56, fontWeight: FontWeight.w700, height: 1)),
+                  const SizedBox(height: 2),
+                  Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
+                    style: TextStyle(color: accent.withOpacity(0.6),
+                      fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 2)),
+                  const SizedBox(height: 12),
+                  Text(
+                    '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.black87,
+                      fontSize: 19, fontStyle: FontStyle.italic, height: 1.5)),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text('— Sahih Muslim, 831',
                       style: TextStyle(color: accent.withOpacity(0.6),
-                        fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 2)),
-                    const SizedBox(height: 20),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Text(
-                        '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          color: Colors.black87,
-                          fontSize: 28, fontStyle: FontStyle.italic, height: 1.6)),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.only(right: 24, top: 4),
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: Text('— Sahih Muslim, 831',
-                          style: TextStyle(color: accent.withOpacity(0.6),
-                            fontSize: 13, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
-                  ],
-                ),
+                        fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: accent.withOpacity(0.08),
               borderRadius: BorderRadius.circular(8)),
             child: Text('Fard prayers can still be prayed',
               textAlign: TextAlign.center,
               style: TextStyle(color: accent.withOpacity(0.7),
-                fontSize: 30, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                fontSize: 20, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           ),
         ],
       ),

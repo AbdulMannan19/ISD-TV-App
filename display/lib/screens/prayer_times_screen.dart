@@ -146,7 +146,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
             final idx      = e.key;
             final isCurrent = idx == SharedData.instance.getCurrentPrayerIndex();
             final isNext    = idx == SharedData.instance.getNextPrayerIndex();
-            return Expanded(child: _prayerRow(e.value, theme, isCurrent: isCurrent, isNext: isNext));
+            return Expanded(child: Center(child: _prayerRow(e.value, theme, isCurrent: isCurrent, isNext: isNext)));
           }),
           const SizedBox(height: 12),
           _buildJumuahBox(theme),
@@ -233,28 +233,31 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
             : (isNext ? theme.accent.withOpacity(0.08) : Colors.transparent),
         borderRadius: BorderRadius.circular(10),
       ),
-      margin: const EdgeInsets.symmetric(vertical: 4),
+      margin: const EdgeInsets.symmetric(vertical: 2),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      alignment: Alignment.center,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              p['name']!,
-              style: TextStyle(
-                color: nameFg,
-                fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.bold),
-                fontSize: 24,
-                letterSpacing: 1.5,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 2,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  p['name']!,
+                  style: TextStyle(
+                    color: nameFg,
+                    fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.bold),
+                    fontSize: 24,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ),
             ),
-          ),
-          Expanded(flex: 3, child: _timeCell(p['adhan']!, theme, isNext: isNext, isCurrent: isCurrent)),
-          Expanded(flex: 3, child: _timeCell(p['iqamah']!, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent)),
-        ],
+            Expanded(flex: 3, child: Center(child: _timeCell(p['adhan']!, theme, isNext: isNext, isCurrent: isCurrent))),
+            Expanded(flex: 3, child: Center(child: _timeCell(p['iqamah']!, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent))),
+          ],
+        ),
       ),
     );
 }
@@ -277,9 +280,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
             color: primaryColor,
             fontSize: 42,
             fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.w600),
-            shadows: (isAccent && !dimmed && theme.glowIntensity > 1.0 ? [
-              Shadow(color: theme.accent, blurRadius: 10 * theme.glowIntensity)
-            ] : null),
           ),
         ),
         const SizedBox(width: 2),
@@ -341,7 +341,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 style: TextStyle(
                   color: theme.accentBright,
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
                 ),
               ),
               if (SharedData.instance.hijriDate.isNotEmpty)
@@ -352,7 +351,6 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   style: TextStyle(
                     color: theme.accentBright,
                     fontSize: 18,
-                    fontWeight: FontWeight.w600,
                   )),
                 ),
             ],
