@@ -677,7 +677,7 @@ class _AlertMarqueeState extends State<_AlertMarquee>
             softWrap: false,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 35,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.5,
               decoration: TextDecoration.none,

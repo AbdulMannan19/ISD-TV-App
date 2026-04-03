@@ -62,7 +62,7 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
           Text('PROHIBITED TIME FOR VOLUNTARY SALAH',
             textAlign: TextAlign.center,
             style: TextStyle(color: accent.withOpacity(0.8),
-              fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 3)),
+              fontSize: 30, fontWeight: FontWeight.w700, letterSpacing: 3)),
           const SizedBox(height: 4),
           Expanded(
             child: Center(
@@ -76,7 +76,7 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
                     const SizedBox(height: 4),
                     Text(_remainingMinutes == 1 ? 'MINUTE REMAINING' : 'MINUTES REMAINING',
                       style: TextStyle(color: accent.withOpacity(0.6),
-                        fontSize: 16, fontWeight: FontWeight.w600, letterSpacing: 2)),
+                        fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 2)),
                     const SizedBox(height: 20),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -84,8 +84,8 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
                         '"There were three times at which Allah\'s Messenger used to forbid us to pray or bury our dead: when the sun begins to rise till it is fully up, when the sun is at its height at midday till it passes over the meridian, and when the sun draws near to setting till it sets."',
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.black87,  // always dark on white card
-                          fontSize: 15, fontStyle: FontStyle.italic, height: 1.6)),
+                          color: Colors.black87,
+                          fontSize: 28, fontStyle: FontStyle.italic, height: 1.6)),
                     ),
                     Padding(
                       padding: const EdgeInsets.only(right: 24, top: 4),
@@ -110,7 +110,7 @@ class _ProhibitedTimeScreenState extends State<ProhibitedTimeScreen> {
             child: Text('Fard prayers can still be prayed',
               textAlign: TextAlign.center,
               style: TextStyle(color: accent.withOpacity(0.7),
-                fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
+                fontSize: 30, fontWeight: FontWeight.w600, letterSpacing: 0.5)),
           ),
         ],
       ),
