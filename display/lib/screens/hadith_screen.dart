@@ -10,8 +10,26 @@ class HadithScreen extends StatelessWidget {
     return ContentScreen(
       title: 'HADITH OF THE DAY',
       fetchContent: () async => SharedData.instance.currentHadith,
-      contentBgColor: const Color(0xFFF1F8F1),   // light sage
-      contentTextColor: const Color(0xFF1B5E20), // dark forest green
+      contentBgColor: const Color(0xFFF1F8F1),
+      contentTextColor: const Color(0xFF1B5E20),
+    );
+  }
+}
+
+class Hadith2Screen extends StatelessWidget {
+  const Hadith2Screen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final h = SharedData.instance.currentHadith;
+    return ContentScreen(
+      title: 'HADITH OF THE DAY',
+      fetchContent: () async => {
+        'text': h['text2'] ?? '',
+        'source': h['source2'] ?? '',
+      },
+      contentBgColor: const Color(0xFFF1F8F1),
+      contentTextColor: const Color(0xFF1B5E20),
     );
   }
 }

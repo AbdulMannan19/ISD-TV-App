@@ -127,7 +127,7 @@ class SharedData {
 
   Future<bool> fetchDailyContent() async {
     try {
-      currentHadith = await DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}).getTodaysContent();
+      currentHadith = await DailyContentService(tableName: 'hadiths', fallback: {'text': '', 'source': ''}, fetchSecondContent: true).getTodaysContent();
       currentDua = await DailyContentService(tableName: 'duas', fallback: {'text': '', 'source': ''}).getTodaysContent();
       currentVerse = await DailyContentService(tableName: 'verses', fallback: {'text': '', 'source': ''}).getTodaysContent();
       

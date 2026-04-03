@@ -274,7 +274,7 @@ class _ContentScreenState extends State<ContentScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Text('AZAN', style: TextStyle(color: theme.textMuted, fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 1)),
-        const SizedBox(height: 2),
+        const SizedBox(height: 30),
         Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: 24, fontWeight: FontWeight.w600, letterSpacing: 1)),
       ],
     );

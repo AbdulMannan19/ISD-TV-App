@@ -194,7 +194,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
               const SizedBox(width: 20),
               _subscriptTime(
                 SharedData.instance.jummah, 
-                28, 
+                33, 
                 highlightWeight, 
                 theme, 
                 isAccent: true,

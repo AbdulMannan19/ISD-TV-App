@@ -28,7 +28,7 @@ const HIJRI_MONTHS = [
   'Ramadan', 'Shawwal', "Dhul Qi'dah", 'Dhul Hijjah',
 ];
 
-export default function ContentManager({ tableName, title, subtitle, contentLabel }) {
+export default function ContentManager({ tableName, title, subtitle, contentLabel, hasSecondContent = false }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(0); // 0-indexed
@@ -39,22 +39,23 @@ export default function ContentManager({ tableName, title, subtitle, contentLabe
   const [editRow, setEditRow] = useState(null);
   const [editText, setEditText] = useState('');
   const [editSource, setEditSource] = useState('');
+  const [editText2, setEditText2] = useState('');
+  const [editSource2, setEditSource2] = useState('');
   const [saving, setSaving] = useState(false);
 
   const fetchRows = useCallback(async () => {
-    // Fetch only the 30 rows for the selected month
-    // id = monthIndex * 30 + day, so month 0 = ids 1-30, month 1 = ids 31-60, etc.
     const startId = selectedMonth * 30 + 1;
     const endId = startId + 29;
+    const selectCols = hasSecondContent ? 'id, text, source, text2, source2' : 'id, text, source';
     const { data } = await supabase
       .from(tableName)
-      .select('id, text, source')
+      .select(selectCols)
       .gte('id', startId)
       .lte('id', endId)
       .order('id', { ascending: true });
     if (data) setRows(data);
     setLoading(false);
-  }, [tableName, selectedMonth]);
+  }, [tableName, selectedMonth, hasSecondContent]);
 
   useEffect(() => { setLoading(true); fetchRows(); }, [fetchRows]);
 
@@ -65,14 +66,23 @@ export default function ContentManager({ tableName, title, subtitle, contentLabe
     setEditRow(row);
     setEditText(row.text);
     setEditSource(row.source);
+    if (hasSecondContent) {
+      setEditText2(row.text2 || '');
+      setEditSource2(row.source2 || '');
+    }
   };
 
   const handleSave = async () => {
     if (!editRow) return;
     setSaving(true);
+    const updateData = { text: editText, source: editSource };
+    if (hasSecondContent) {
+      updateData.text2 = editText2 || null;
+      updateData.source2 = editSource2 || null;
+    }
     const { error } = await supabase
       .from(tableName)
-      .update({ text: editText, source: editSource })
+      .update(updateData)
       .eq('id', editRow.id);
     if (error) {
       setStatus('Error: ' + error.message);
@@ -134,6 +144,8 @@ export default function ContentManager({ tableName, title, subtitle, contentLabe
               <th style={{ width: 60 }}>Day</th>
               <th>{contentLabel}</th>
               <th style={{ width: 180 }}>Source</th>
+              {hasSecondContent && <th>{contentLabel} 2</th>}
+              {hasSecondContent && <th style={{ width: 180 }}>Source 2</th>}
               <th style={{ width: 44 }}></th>
             </tr>
           </thead>
@@ -147,6 +159,16 @@ export default function ContentManager({ tableName, title, subtitle, contentLabe
                   </div>
                 </td>
                 <td className="content-source">{r.source || '-'}</td>
+                {hasSecondContent && (
+                  <td className="content-text-cell">
+                    <div className="content-text-preview" onClick={() => openEdit(r)}>
+                      {r.text2 || <em style={{ color: 'var(--text-muted)' }}>Empty</em>}
+                    </div>
+                  </td>
+                )}
+                {hasSecondContent && (
+                  <td className="content-source">{r.source2 || '-'}</td>
+                )}
                 <td>
                   <button className="content-edit-btn" onClick={() => openEdit(r)} title="Edit">
                     <EditIcon />
@@ -188,6 +210,28 @@ export default function ContentManager({ tableName, title, subtitle, contentLabe
                 onChange={e => setEditSource(e.target.value)}
               />
             </div>
+            {hasSecondContent && (
+              <>
+                <div className="content-edit-field">
+                  <label>{contentLabel} 2 (optional)</label>
+                  <textarea
+                    value={editText2}
+                    onChange={e => setEditText2(e.target.value)}
+                    rows={6}
+                    placeholder="Leave empty for single content"
+                  />
+                </div>
+                <div className="content-edit-field">
+                  <label>Source 2 (optional)</label>
+                  <input
+                    type="text"
+                    value={editSource2}
+                    onChange={e => setEditSource2(e.target.value)}
+                    placeholder="Leave empty for single content"
+                  />
+                </div>
+              </>
+            )}
             <div className="content-edit-actions">
               <button className="btn btn-outline" onClick={() => setEditRow(null)}>Cancel</button>
               <button className="btn btn-green" onClick={handleSave} disabled={saving}>

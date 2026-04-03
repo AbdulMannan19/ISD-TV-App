@@ -276,7 +276,10 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   List<Object?> _lastSlideRowIds = [];
   int _slideBuildSeq = 0;
 
-  static const int _kFixedScreens = 4;
+  int get _fixedScreenCount {
+    final hasHadith2 = (SharedData.instance.currentHadith['text2'] ?? '').isNotEmpty;
+    return hasHadith2 ? 5 : 4;
+  }
 
   @override
   void initState() {
@@ -394,14 +397,15 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     List<Object?> oldSlideIds,
     List<Object?> newSlideIds,
   ) {
-    final newLen = _kFixedScreens + newSlideIds.length;
+    final fc = _fixedScreenCount;
+    final newLen = fc + newSlideIds.length;
     if (newLen <= 0) return 0;
 
-    if (oldIndex < _kFixedScreens) {
+    if (oldIndex < fc) {
       return oldIndex.clamp(0, newLen - 1);
     }
 
-    final oldSi = oldIndex - _kFixedScreens;
+    final oldSi = oldIndex - fc;
     if (oldSlideIds.isEmpty || oldSi < 0 || oldSi >= oldSlideIds.length) {
       return oldIndex.clamp(0, newLen - 1);
     }
@@ -409,12 +413,12 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     final currentId = oldSlideIds[oldSi];
     final newPos = newSlideIds.indexOf(currentId);
     if (newPos >= 0) {
-      return _kFixedScreens + newPos;
+      return fc + newPos;
     }
 
     for (var i = oldSi + 1; i < oldSlideIds.length; i++) {
       final np = newSlideIds.indexOf(oldSlideIds[i]);
-      if (np >= 0) return _kFixedScreens + np;
+      if (np >= 0) return fc + np;
     }
     return 0;
   }
@@ -429,9 +433,12 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     final newSlideIds = slides.map<Object?>((s) => s['id']).toList();
     final remappedIndex = _remapIndexAfterSlideListChange(_currentIndex, oldSlideIds, newSlideIds);
 
+    final hasHadith2 = (SharedData.instance.currentHadith['text2'] ?? '').isNotEmpty;
+
     final screens = <Widget>[
       const PrayerTimesScreen(),
       const HadithScreen(),
+      if (hasHadith2) const Hadith2Screen(),
       const DuaScreen(),
       const VerseScreen(),
       ...slides.map((s) {
@@ -442,7 +449,9 @@ class _ScreenRotatorState extends State<ScreenRotator> {
       }),
     ];
     final durations = <int>[
-      30, 30, 30, 30,
+      30, 30,
+      if (hasHadith2) 30,
+      30, 30,
       ...slides.map((s) => (s['duration_seconds'] as int?) ?? 30),
     ];
     if (mounted && seq == _slideBuildSeq) {
@@ -507,7 +516,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
 
     final showAlerts = _alerts.isNotEmpty &&
         _displayMode.mode != DisplayMode.silence &&
-        !(_displayMode.mode == DisplayMode.normal && _currentIndex >= 4);
+        !(_displayMode.mode == DisplayMode.normal && _currentIndex >= _fixedScreenCount);
 
     return Stack(
       children: [

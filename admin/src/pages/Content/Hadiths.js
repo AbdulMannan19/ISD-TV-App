@@ -7,6 +7,7 @@ export default function Hadiths() {
       title="Hadiths"
       subtitle="Manage daily hadiths mapped to the Hijri calendar"
       contentLabel="Hadith"
+      hasSecondContent={true}
     />
   );
 }

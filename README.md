@@ -97,3 +97,25 @@ git commit -m "quick commit"
 git push
 clear
 ```
+
+---
+
+## 📋 Saved Prompts
+
+### Friday Dual Hadith Feature
+```
+Implement Friday dual hadith logic: On Fridays, always show a second hadith screen (Hadith 2) using one of these 3 hardcoded Friday hadiths picked randomly (but consistent for the day). The primary hadith (screen 1) stays as the normal Hijri-date hadith from DB. The Friday hadith overrides any text2/source2 from the DB — so Friday always gets priority for the second slot.
+
+Friday Hadiths:
+
+1. Text: Narrated Salman Al-Farsi: The Prophet (p.b.u.h) said, "Whoever takes a bath on Friday, purifies himself as much as he can, then uses his (hair) oil or perfumes himself with the scent of his house, then proceeds (for the Jumua prayer) and does not separate two persons sitting together (in the mosque), then prays as much as (Allah has) written for him and then remains silent while the Imam is delivering the Khutba, his sins in-between the present and the last Friday would be forgiven."
+   Source: Sahih Bukhari - 8, Friday: Etiquettes
+
+2. Text: Ibn Umar (may Allah be pleased with him) said: "The Messenger of Allah (peace and blessings of Allah be upon him) said: 'Whoever reads Surat al-Kahf on the day of Jumu'ah, a light will shine for him from beneath his feet to the clouds of the sky, which will shine for him on the Day of Resurrection, and he will be forgiven (his sins) between the two Fridays.'"
+   Source: al-Sunan al-Kubra lil-Bayhaqi 5996
+
+3. Text: Aws b. Aws reported the Messenger of Allah as saying: Among the most excellent of your days is Friday; so invoke many blessings on me on that day, for your blessing will be submitted to me. They (the Companions) asked: Messenger of Allah, how can our blessings be submitted to you, when your body has decayed? He said: Allah has prohibited the earth from consuming the bodies of Prophets.
+   Source: Sunan Abi Dawud 1531
+
+Implementation: In SharedData.fetchDailyContent(), after fetching from DB, if now.weekday == DateTime.friday, override currentHadith['text2'] and currentHadith['source2'] with a randomly picked Friday hadith. Use a deterministic seed from the date so it stays consistent throughout the day.
+```
