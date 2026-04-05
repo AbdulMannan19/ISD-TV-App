@@ -79,12 +79,6 @@ Future<void> main() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  
-  try {
-    // Apply any scheduled Iqamah changes before app starts
-    await IqamahScheduleService.applyScheduledChanges();
-    await IqamahScheduleService.applyLookaheadChanges();
-  } catch (_) {}
 
   runApp(const DisplayApp());
 }
@@ -145,9 +139,8 @@ class _StartupGateState extends State<StartupGate> {
           final contentSuccess = await SharedData.instance.fetchDailyContent();
           
           if (contentSuccess) {
-            // 4. Scheduled changes
+            // 4. Apply lookahead scheduled changes
             try {
-              await IqamahScheduleService.applyScheduledChanges();
               await IqamahScheduleService.applyLookaheadChanges();
             } catch (_) {}
 
@@ -319,7 +312,6 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   }
 
   Future<void> _refreshAtMidnight() async {
-    await IqamahScheduleService.applyScheduledChanges();
     await SharedData.instance.init();
     _displayMode.scheduleProhibited();
     _displayMode.scheduleIqamahLock();
