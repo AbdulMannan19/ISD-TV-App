@@ -75,10 +75,7 @@ Future<void> main() async {
   }
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+
   
   try {
     // Apply any scheduled Iqamah changes before app starts
