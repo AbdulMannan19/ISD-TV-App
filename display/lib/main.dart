@@ -248,7 +248,7 @@ class ScreenRotator extends StatefulWidget {
   State<ScreenRotator> createState() => _ScreenRotatorState();
 }
 
-class _ScreenRotatorState extends State<ScreenRotator> {
+class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserver {
   int _currentIndex = 0;
   List<Widget> _screens = [];
   List<int> _screenDurations = [];
@@ -276,6 +276,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    
     _buildScreens();
     _listenToSlideChanges();
     _listenToPrayerTimesChanges();
@@ -296,6 +298,45 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     _scheduleNextRotation();
     _scheduleMidnightRefresh();
     _scheduleMaghribRefresh();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Force an immediate refresh of all core data whenever the mobile app returns to the foreground
+      // because WebSockets and timers often get killed by the OS in the background.
+      debugPrint("App resumed from background — Forcing full data sync.");
+      _forceRefreshAll();
+    }
+  }
+
+  Future<void> _forceRefreshAll() async {
+    // 1. Refresh global prayer times and display modes
+    await SharedData.instance.init();
+    await SharedData.instance.fetchDailyContent();
+    await _displayMode.refreshIqamahFromDb();
+    _displayMode.scheduleProhibited();
+    _displayMode.scheduleIqamahLock();
+    
+    // 2. Fetch latest theme safely without re-registering sockets
+    try {
+      final settings = await Supabase.instance.client.from('settings').select('theme_id').eq('id', 1).maybeSingle();
+      if (settings != null && settings['theme_id'] != null) {
+        // Since _applyTheme is private, we will just re-init ThemeService which drops and reconnects safely
+        await ThemeService().init();
+      }
+    } catch (_) {}
+
+    // 3. Rebuild rotation screens
+    await _buildScreens();
+    
+    // 4. Reschedule background timers
+    _midnightTimer?.cancel();
+    _maghribRefreshTimer?.cancel();
+    _scheduleMidnightRefresh();
+    _scheduleMaghribRefresh();
+
+    if (mounted) setState(() {});
   }
 
   void _scheduleMidnightRefresh() {
@@ -481,6 +522,7 @@ class _ScreenRotatorState extends State<ScreenRotator> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _rotationTimer?.cancel();
     _midnightTimer?.cancel();
     _maghribRefreshTimer?.cancel();
