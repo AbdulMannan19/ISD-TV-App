@@ -1,8 +1,3 @@
-Alert
-Auto Launch
-
-
-
 git status
 git add .
 git commit -m "quick commit"

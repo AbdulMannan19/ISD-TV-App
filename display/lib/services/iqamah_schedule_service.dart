@@ -3,14 +3,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class IqamahScheduleService {
   static final _supabase = Supabase.instance.client;
 
-  static const _labels = {
-    'fajr': 'Fajr',
-    'zuhr': 'Dhuhr',
-    'asr': 'Asr',
-    'maghrib': 'Maghrib',
-    'isha': 'Isha',
-  };
-
+  /// Apply scheduled iqamah changes where effective_date <= today.
+  /// Called at midnight and startup.
   static Future<void> applyScheduledChanges() async {
     try {
       final today = DateTime.now();
@@ -24,8 +18,6 @@ class IqamahScheduleService {
       final rows = response as List;
       if (rows.isEmpty) return;
 
-      final changes = <String>[];
-
       for (final row in rows) {
         final prayer = row['prayer'] as String;
         final iqamah = row['iqamah'] as String;
@@ -36,19 +28,7 @@ class IqamahScheduleService {
             .update({'iqamah': iqamah})
             .eq('prayer', prayer);
 
-        changes.add('${_labels[prayer] ?? prayer}: $iqamah');
-
         await _supabase.from('iqamah_schedule').delete().eq('id', id);
-      }
-
-      if (changes.isNotEmpty) {
-        final alertText = 'Iqamah time updated — ${changes.join(', ')}';
-        final now = DateTime.now().toUtc();
-        await _supabase.from('alerts').insert({
-          'text': alertText,
-          'start_time': now.toIso8601String(),
-          'end_time': now.add(const Duration(hours: 24)).toIso8601String(),
-        });
       }
     } catch (_) {}
   }

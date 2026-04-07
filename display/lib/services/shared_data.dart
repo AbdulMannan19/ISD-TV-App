@@ -148,6 +148,7 @@ class SharedData {
       hijriDate = data['hijriDate'] as String;
       hijriMonth = data['hijriMonth'] as int;
       hijriDay = data['hijriDay'] as int;
+      _adjustHijriIfAfterSunset();
       prayers = (data['prayers'] as List).map((p) => {
         'name': p['name'] as String,
         'adhan': p['adhan'] as String,
@@ -158,6 +159,39 @@ class SharedData {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Aladhan API returns Hijri dates aligned to Gregorian midnight,
+  /// but the Islamic day starts at Maghrib (sunset). If current time
+  /// is after sunset, bump the Hijri day forward by 1.
+  void _adjustHijriIfAfterSunset() {
+    if (sunset.isEmpty) return;
+    final now = this.now;
+    final sunsetDt = _parseTime(sunset, now);
+    if (sunsetDt == null) return;
+    if (now.isAfter(sunsetDt) || now.isAtSameMomentAs(sunsetDt)) {
+      bumpHijriDay();
+    }
+  }
+
+  void bumpHijriDay() {
+    // Hijri months are 29 or 30 days; use 30 as safe max
+    if (hijriDay >= 30) {
+      hijriDay = 1;
+      hijriMonth = hijriMonth >= 12 ? 1 : hijriMonth + 1;
+    } else {
+      hijriDay += 1;
+    }
+    // Rebuild the display string
+    const monthNames = [
+      '', 'Muḥarram', 'Ṣafar', 'Rabīʿ al-Awwal', 'Rabīʿ al-Thānī',
+      'Jumādā al-Ūlā', 'Jumādā al-Thāniyah', 'Rajab', 'Shaʿbān',
+      'Ramaḍān', 'Shawwāl', 'Dhū al-Qaʿdah', 'Dhū al-Ḥijjah',
+    ];
+    final parts = hijriDate.split(',');
+    final year = parts.length > 1 ? parts.last.trim() : '';
+    final mName = (hijriMonth >= 1 && hijriMonth <= 12) ? monthNames[hijriMonth] : '';
+    hijriDate = '$mName $hijriDay, $year';
   }
 
   String lastThird = '--';

@@ -147,18 +147,6 @@ export default function PrayerTimes() {
     if (err) {
       setStatus('Error saving: ' + err.error.message);
     } else {
-      if (changed.length > 0) {
-        const parts = changed.map(([prayer, iqamah]) =>
-          `${LABELS[prayer]}: ${to12(iqamah)}`
-        );
-        const alertText = `Iqamah time updated — ${parts.join(', ')}`;
-        const now = new Date();
-        await supabase.from('alerts').insert({
-          text: alertText,
-          start_time: now.toISOString(),
-          end_time: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
-        });
-      }
       setStatus('Times updated');
       fetchTimes();
     }

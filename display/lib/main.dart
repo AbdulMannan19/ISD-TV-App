@@ -76,11 +76,6 @@ Future<void> main() async {
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
 
-  
-  try {
-    // Apply any scheduled Iqamah changes before app starts
-    await IqamahScheduleService.applyScheduledChanges();
-  } catch (_) {}
 
   runApp(const DisplayApp());
 }
@@ -141,7 +136,7 @@ class _StartupGateState extends State<StartupGate> {
           final contentSuccess = await SharedData.instance.fetchDailyContent();
           
           if (contentSuccess) {
-            // 4. Scheduled changes
+            // 4. Apply scheduled changes
             try {
               await IqamahScheduleService.applyScheduledChanges();
             } catch (_) {}
@@ -333,8 +328,8 @@ class _ScreenRotatorState extends State<ScreenRotator> {
     if (refreshTime.isBefore(now)) return;
 
     _maghribRefreshTimer = Timer(refreshTime.difference(now), () async {
-      // Hijri date changes at sunset — fetch new daily content
-      await SharedData.instance.init();
+      // Hijri date changes at sunset — bump locally (Aladhan only updates at midnight)
+      SharedData.instance.bumpHijriDay();
       await SharedData.instance.fetchDailyContent();
       if (mounted) setState(() {});
     });
@@ -645,7 +640,7 @@ class _AlertMarqueeState extends State<_AlertMarquee>
       _childWidth = renderBox.size.width;
     }
     final totalDistance = _screenWidth + _childWidth;
-    final durationMs = (totalDistance / 50 * 1000).toInt();
+    final durationMs = (totalDistance / 20 * 1000).toInt();
     _controller.duration = Duration(milliseconds: durationMs);
     _controller.repeat();
   }
@@ -658,38 +653,42 @@ class _AlertMarqueeState extends State<_AlertMarquee>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        final totalDistance = _screenWidth + _childWidth;
-        final dx = _screenWidth - _controller.value * totalDistance;
-        return Transform.translate(
-          offset: Offset(dx, 0),
-          child: child,
-        );
-      },
-      child: UnconstrainedBox(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          key: _childKey,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.red.shade800,
-            borderRadius: BorderRadius.circular(4),
-          ),
-          child: Text(
-            widget.text,
-            maxLines: 1,
-            softWrap: false,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 35,
-              fontWeight: FontWeight.w600,
-              letterSpacing: 0.5,
-              decoration: TextDecoration.none,
-            ),
+    final child = UnconstrainedBox(
+      alignment: Alignment.centerLeft,
+      child: Container(
+        key: _childKey,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.red.shade800,
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Text(
+          widget.text,
+          maxLines: 1,
+          softWrap: false,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 23,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.5,
+            decoration: TextDecoration.none,
           ),
         ),
+      ),
+    );
+
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final totalDistance = _screenWidth + _childWidth;
+          final dx = _screenWidth - _controller.value * totalDistance;
+          return Transform(
+            transform: Matrix4.translationValues(dx, 0, 0),
+            child: child,
+          );
+        },
+        child: child,
       ),
     );
   }

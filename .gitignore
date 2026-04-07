@@ -15,5 +15,6 @@ display/ios/
 display/web/
 
 .vscode
+.idea
 
 upload-keystore.jks

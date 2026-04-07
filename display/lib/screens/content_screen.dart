@@ -291,7 +291,7 @@ class _ContentScreenState extends State<ContentScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
             decoration: BoxDecoration(color: theme.accent.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
             child: Column(children: [
-              Text('${shared.getNextPrayerName()} IQAMA IN',
+              Text('${shared.getNextPrayerName()} IQAMAH IN',
                 style: TextStyle(color: theme.textMuted, fontSize: 13, fontWeight: FontWeight.w700, letterSpacing: 1.5)),
                   const SizedBox(height: 2),
                   Text(shared.getCountdown(),
