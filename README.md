@@ -17,6 +17,7 @@ cd admin
 npm start
 
 static const bool configEnableSimulation = false;
+static const bool configEnableSimulation = true;
 
 
 # ISD TV Display System

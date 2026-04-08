@@ -341,8 +341,8 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
 
   void _scheduleMidnightRefresh() {
     final now = SharedData.instance.now;
-    // 12:01 AM — 1 min buffer to ensure Gregorian date has changed
-    final next = DateTime(now.year, now.month, now.day + 1, 0, 1);
+    // 12:03 AM — 3 min buffer to ensure Gregorian date has changed
+    final next = DateTime(now.year, now.month, now.day + 1, 0, 3);
     _midnightTimer = Timer(next.difference(now), () {
       _refreshAtMidnight();
       _midnightTimer = Timer.periodic(const Duration(hours: 24), (_) => _refreshAtMidnight());
@@ -350,13 +350,7 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
   }
 
   Future<void> _refreshAtMidnight() async {
-    await IqamahScheduleService.applyScheduledChanges();
-    await SharedData.instance.init();
-    _displayMode.scheduleProhibited();
-    _displayMode.scheduleIqamahLock();
-    _maghribRefreshTimer?.cancel();
-    _scheduleMaghribRefresh();
-    if (mounted) setState(() {});
+    await _forceRefreshAll();
   }
 
   void _scheduleMaghribRefresh() {
