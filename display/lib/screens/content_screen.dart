@@ -76,12 +76,12 @@ class _ContentScreenState extends State<ContentScreen> {
     final length = text.length + (newlineCount * 40);
 
     if (isMobile) {
-      if (length < 80)  return 24;
-      if (length < 150) return 20;
-      if (length < 250) return 18;
-      if (length < 400) return 15;
-      if (length < 600) return 14;
-      return 12;
+      if (length < 80)  return 20;
+      if (length < 150) return 18;
+      if (length < 250) return 16;
+      if (length < 400) return 14;
+      if (length < 600) return 12;
+      return 10;
     }
     if (length < 80)  return 34;
     if (length < 150) return 30;
@@ -111,7 +111,7 @@ class _ContentScreenState extends State<ContentScreen> {
       body: ThemeService().buildBackground(
         child: SafeArea(
           child: Padding(
-            padding: EdgeInsets.all(isPortrait ? 12.0 : 20.0),
+            padding: EdgeInsets.all(isPortrait ? 12.0 : (isMobile ? 12.0 : 20.0)),
             child: isPortrait ? _buildPortraitLayout(theme, isMobile, isSmallHeight) : _buildLandscapeLayout(theme, isMobile, isSmallHeight),
           ),
         ),
@@ -481,9 +481,9 @@ class _ContentScreenState extends State<ContentScreen> {
           child: Text('X', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
         ),
         const SizedBox(height: 2),
-        Text('AZAN',   style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
-        const SizedBox(height: 22),
-        Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        Text('AZAN',   style: TextStyle(color: theme.textMuted, fontSize: isSmallHeight ? 12 : 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
+        SizedBox(height: isSmallHeight ? 18 : 22),
+        Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: isSmallHeight ? 12 : 14, fontWeight: FontWeight.w600, letterSpacing: 1)),
       ],
     );
   }
@@ -528,13 +528,13 @@ class _ContentScreenState extends State<ContentScreen> {
               Text('AZAN', style: TextStyle(color: theme.textMuted, fontSize: 8, fontWeight: FontWeight.w600)),
             ],
             const SizedBox(height: 2),
-            _subscriptTime(p['adhan']!,  isSmallHeight ? 22 : 30, FontWeight.w700, theme, isNext: isNext, isCurrent: isCurrent),
+            _subscriptTime(p['adhan']!,  isSmallHeight ? 20 : 30, FontWeight.w700, theme, isNext: isNext, isCurrent: isCurrent),
             
             if (isPortraitMode) ...[
               const SizedBox(height: 2),
               Text('IQAMAH', style: TextStyle(color: theme.textMuted, fontSize: 8, fontWeight: FontWeight.w600)),
             ],
-            _subscriptTime(p['iqamah']!, isSmallHeight ? 22 : 30, FontWeight.w700, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
+            _subscriptTime(p['iqamah']!, isSmallHeight ? 20 : 30, FontWeight.w700, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
           ],
         ),
       ),

@@ -80,7 +80,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
 
   Widget _buildWide(ThemeConfig theme, {bool isSmallHeight = false}) {
     return Padding(
-      padding: EdgeInsets.all(isSmallHeight ? 12 : 20),
+      padding: EdgeInsets.all(isSmallHeight ? 8 : 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -139,7 +139,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.accent,
-                    fontSize: 18,
+                    fontSize: isSmallHeight ? 14 : 18,
                     letterSpacing: 2,
                     fontWeight: FontWeight.w600,
                   ),
@@ -196,14 +196,14 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 style: TextStyle(
                   color: isHighlighted ? highlightMain : theme.text,
                   fontWeight: highlightWeight,
-                  fontSize: isSmallHeight ? 16 : 26,
+                  fontSize: isSmallHeight ? 14 : 26,
                   letterSpacing: 1.5,
                 ),
               ),
               const SizedBox(width: 20),
               _subscriptTime(
                 SharedData.instance.jummah, 
-                isSmallHeight ? 20 : 32, 
+                isSmallHeight ? 18 : 32, 
                 highlightWeight, 
                 theme, 
                 isAccent: true,
@@ -259,8 +259,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   style: TextStyle(
                     color: nameFg,
                     fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.bold),
-                    fontSize: isSmallHeight ? 16 : 24,
-                    letterSpacing: isSmallHeight ? 0.5 : 1.5,
+                    fontSize: isSmallHeight ? 14 : 24,
+                    letterSpacing: isSmallHeight ? 0.2 : 1.5,
                   ),
                 ),
               ),
@@ -289,7 +289,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp[0],
           style: TextStyle(
             color: primaryColor,
-            fontSize: isSmallHeight ? 22 : 42,
+            fontSize: isSmallHeight ? 18 : 42,
             fontWeight: isCurrent ? FontWeight.w900 : (isNext ? FontWeight.w700 : FontWeight.w600),
           ),
         ),
@@ -340,8 +340,8 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           Column(
             children: [
               Container(
-                width: isSmallHeight ? 60 : 80,
-                height: isSmallHeight ? 60 : 80,
+                width: isSmallHeight ? 45 : 80,
+                height: isSmallHeight ? 45 : 80,
                 decoration: BoxDecoration(
                   color: theme.bg,
                   borderRadius: BorderRadius.circular(8),
@@ -362,7 +362,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: theme.accentBright,
-                    fontSize: isSmallHeight ? 16 : 20,
+                    fontSize: isSmallHeight ? 13 : 20,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -442,7 +442,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           sp[0],
           style: TextStyle(
             color: theme.text,
-            fontSize: isSmallHeight ? 40 : 55,
+            fontSize: isSmallHeight ? 32 : 55,
             fontWeight: FontWeight.w700,
             letterSpacing: -1,
           ),
