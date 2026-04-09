@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class ResponsiveHelper {
-  // A device is considered mobile if its shortest side is less than 600 logical pixels.
-  // Phones typically have a shortest side of 300-450. Tablets and TVs are 600+.
+  static bool get _isTV => (dotenv.env['DEVICE'] ?? 'TV').toUpperCase() == 'TV';
+
   static bool isMobile(BuildContext context) {
+    if (_isTV) return false;
     return MediaQuery.of(context).size.shortestSide < 600;
   }
 
-  // A device is considered small height (like a phone in landscape) if height is less than 500
   static bool isSmallHeight(BuildContext context) {
+    if (_isTV) return false;
     return MediaQuery.of(context).size.height < 500;
   }
 
