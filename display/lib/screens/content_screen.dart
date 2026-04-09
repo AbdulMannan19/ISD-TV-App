@@ -69,7 +69,12 @@ class _ContentScreenState extends State<ContentScreen> {
     return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
-  double _dynamicFontSize(int length, {bool isMobile = false}) {
+  double _dynamicFontSize(String text, {bool isMobile = false}) {
+    // Each newline character (\n) adds significant vertical space.
+    // We treat each newline as ~35 dummy characters to force a smaller font size.
+    final newlineCount = '\n'.allMatches(text).length;
+    final length = text.length + (newlineCount * 40);
+
     if (isMobile) {
       if (length < 80)  return 24;
       if (length < 150) return 20;
@@ -78,12 +83,12 @@ class _ContentScreenState extends State<ContentScreen> {
       if (length < 600) return 14;
       return 12;
     }
-    if (length < 80)  return 36;
-    if (length < 150) return 32;
-    if (length < 250) return 28;
-    if (length < 400) return 24;
-    if (length < 600) return 20;
-    return 17;
+    if (length < 80)  return 34;
+    if (length < 150) return 30;
+    if (length < 250) return 26;
+    if (length < 400) return 23;
+    if (length < 600) return 19;
+    return 16;
   }
 
   @override
@@ -206,7 +211,7 @@ class _ContentScreenState extends State<ContentScreen> {
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: cardText,
-                            fontSize: _dynamicFontSize(text.length, isMobile: isMobile),
+                            fontSize: _dynamicFontSize(text, isMobile: isMobile),
                             fontWeight: FontWeight.w400,
                             height: 1.5,
                             letterSpacing: 0.3)),
