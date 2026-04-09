@@ -19,6 +19,11 @@ npm start
 static const bool configEnableSimulation = false;
 static const bool configEnableSimulation = true;
 
+For setting the app as default launcher on Android TV:
+adb shell cmd package set-home-activity com.isd.display/com.isd.display.MainActivity
+adb shell cmd shortcut get-default-launcher
+adb shell pm disable-user --user 0 com.google.android.tvlauncher
+
 
 # ISD TV Display System
 
