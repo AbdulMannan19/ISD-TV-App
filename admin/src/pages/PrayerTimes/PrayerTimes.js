@@ -59,6 +59,7 @@ export default function PrayerTimes() {
   const [validationErrors, setValidationErrors] = useState({});
   const [hijriDate, setHijriDate] = useState('');
   const [sunrise, setSunrise] = useState('');
+  const [lastThird, setLastThird] = useState('');
 
   // Schedule state
   const [scheduled, setScheduled] = useState([]);
@@ -91,6 +92,17 @@ export default function PrayerTimes() {
         const hijri = json.data.date.hijri;
         setHijriDate(`${hijri.month.en} ${hijri.day}, ${hijri.year}`);
         setSunrise(aladhan.Sunrise.split(' ')[0]);
+
+        // Calculate Last Third
+        const maghribMins = timeToMin(aladhan.Maghrib.split(' ')[0]);
+        const fajrMins = timeToMin(aladhan.Fajr.split(' ')[0]);
+        if (maghribMins !== null && fajrMins !== null) {
+          const duration = (fajrMins + 1440) - maghribMins;
+          const lastThirdMins = (fajrMins + 1440 - (duration / 3)) % 1440;
+          const h = Math.floor(lastThirdMins / 60);
+          const m = Math.floor(lastThirdMins % 60);
+          setLastThird(`${h}:${String(m).padStart(2, '0')}`);
+        }
 
         const map = {};
         PRAYERS.forEach(p => {
@@ -280,6 +292,10 @@ export default function PrayerTimes() {
         <div className="pt-stat-item">
           <span className="pt-stat-label">Sunrise</span>
           <span className="pt-stat-value">{sunrise ? to12(sunrise) : '-'}</span>
+        </div>
+        <div className="pt-stat-item">
+          <span className="pt-stat-label">Last Third</span>
+          <span className="pt-stat-value">{lastThird ? to12(lastThird) : '-'}</span>
         </div>
       </div>
 
