@@ -64,24 +64,14 @@ class PrayerTimesService {
 
       final iqamahTimes = await _fetchIqamahFromDb();
       final fajrIqamah = iqamahTimes['fajr'] ?? _addMinutes(fajrAdhan, 25);
-      final dhuhrIqamah = iqamahTimes['zuhr'] ?? _addMinutes(dhuhrAdhan, 19);
-      final asrIqamah = iqamahTimes['asr'] ?? _addMinutes(asrAdhan, 19);
-      final ishaIqamah = iqamahTimes['isha'] ?? _addMinutes(ishaAdhan, 28);
+      final dhuhrIqamah = iqamahTimes['zuhr'] ?? _addMinutes(dhuhrAdhan, 20);
+      final asrIqamah = iqamahTimes['asr'] ?? _addMinutes(asrAdhan, 20);
+      final ishaIqamah = iqamahTimes['isha'] ?? _addMinutes(ishaAdhan, 20);
       final maghribIqamah = _addMinutes(maghribAdhan, 10);
       final jummah1 = iqamahTimes['jummah'] ?? '1:45 PM';
 
-      await _updateDbTimes(
-        fajrAdhan,
-        dhuhrAdhan,
-        asrAdhan,
-        maghribAdhan,
-        ishaAdhan,
-        fajrIqamah,
-        dhuhrIqamah,
-        asrIqamah,
-        maghribIqamah,
-        ishaIqamah,
-      );
+      // Removed _updateDbTimes call as both TV and mobile use Aladhan API directly.
+      // Saving these to Supabase is redundant and causes RLS errors.
 
       return {
         'date': gregorian['date'] as String? ?? '',
