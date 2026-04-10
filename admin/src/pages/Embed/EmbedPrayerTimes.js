@@ -75,13 +75,11 @@ export default function EmbedPrayerTimes() {
                 if (data) {
                     const map = {};
                     data.forEach(row => { 
-                        if (row.prayer === 'maghrib' && row.adhan) {
-                            row.iqamah = addMinutes(row.adhan, 10);
-                        }
-                        map[row.prayer] = row; 
+                        map[row.prayer] = { iqamah: row.iqamah }; 
                     });
-                    setTimes(map);
+                    return map;
                 }
+                return {};
             };
 
             const fetchTheme = async () => {
@@ -92,50 +90,76 @@ export default function EmbedPrayerTimes() {
                 }
             };
 
-            const fetchAladhan = async () => {
-                try {
-                    const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
-                    const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
+            const [dbTimes, aladhanData] = await Promise.all([fetchDb(), fetchAladhan()]);
+            await fetchTheme();
 
-                    const now = new Date();
-                    const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
-                    const apiUrl = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+            if (aladhanData) {
+                const newTimes = {};
+                PRAYERS.forEach(p => {
+                    const key = p === 'zuhr' ? 'Dhuhr' : (p.charAt(0).toUpperCase() + p.slice(1));
+                    const adhan = aladhanData[key].split(' ')[0];
+                    let iqamah = dbTimes[p]?.iqamah || '';
 
-                    const res = await fetch(apiUrl);
-                    const json = await res.json();
-                    if (json.code === 200 && json.data) {
-                        const hijri = json.data.date.hijri;
-                        const month = hijri.month.en || '';
-                        const dayNum = hijri.day || '';
-                        const year = hijri.year || '';
-                        setHijriDate(year ? `${month} ${dayNum}, ${year}` : `${month} ${dayNum}`);
-
-                        let rawSunrise = json.data.timings.Sunrise || '';
-                        if (rawSunrise) {
-                            rawSunrise = rawSunrise.split(' ')[0];
-                        }
-                        setSunrise(rawSunrise);
-
-                        let rawFajr = json.data.timings.Fajr || '';
-                        if (rawFajr && rawSunrise) {
-                            // Option 2: Sunset (Maghrib) to Fajr
-                            const maghribMins = parseTimeMins(json.data.timings.Maghrib);
-                            const fajrMins = parseTimeMins(json.data.timings.Fajr);
-                            const duration = (fajrMins + 1440) - maghribMins;
-                            const lastThirdMins = (fajrMins + 1440 - (duration / 3)) % 1440;
-                            const h = Math.floor(lastThirdMins / 60);
-                            const m = Math.floor(lastThirdMins % 60);
-                            setLastThird(`${h}:${String(m).padStart(2, '0')}`);
-                        }
+                    // Maghrib auto-calculation: Adhan + 10 mins
+                    if (p === 'maghrib') {
+                        iqamah = addMinutes(adhan, 10);
                     }
-                } catch (_) { }
-            };
 
-            await Promise.all([fetchDb(), fetchAladhan(), fetchTheme()]);
+                    newTimes[p] = { adhan, iqamah };
+                });
+                
+                // Add jumu'ah from DB
+                if (dbTimes['jummah']) newTimes['jummah'] = dbTimes['jummah'];
+                if (dbTimes['jummah_2']) newTimes['jummah_2'] = dbTimes['jummah_2'];
+
+                setTimes(newTimes);
+            }
         } finally {
             isFetching.current = false;
         }
     }, []);
+
+    const fetchAladhan = async () => {
+        try {
+            const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
+            const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
+
+            const now = new Date();
+            const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+            const apiUrl = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+
+            const res = await fetch(apiUrl);
+            const json = await res.json();
+            if (json.code === 200 && json.data) {
+                const aladhan = json.data.timings;
+                const hijri = json.data.date.hijri;
+                const month = hijri.month.en || '';
+                const dayNum = hijri.day || '';
+                const year = hijri.year || '';
+                setHijriDate(year ? `${month} ${dayNum}, ${year}` : `${month} ${dayNum}`);
+
+                let rawSunrise = aladhan.Sunrise || '';
+                if (rawSunrise) {
+                    rawSunrise = rawSunrise.split(' ')[0];
+                }
+                setSunrise(rawSunrise);
+
+                let rawFajr = aladhan.Fajr || '';
+                let rawMaghrib = aladhan.Maghrib || '';
+                if (rawFajr && rawMaghrib) {
+                    const maghribMins = parseTimeMins(rawMaghrib);
+                    const fajrMins = parseTimeMins(rawFajr);
+                    const duration = (fajrMins + 1440) - maghribMins;
+                    const lastThirdMins = (fajrMins + 1440 - (duration / 3)) % 1440;
+                    const h = Math.floor(lastThirdMins / 60);
+                    const m = Math.floor(lastThirdMins % 60);
+                    setLastThird(`${h}:${String(m).padStart(2, '0')}`);
+                }
+                return aladhan;
+            }
+        } catch (_) { }
+        return null;
+    };
 
     // 2. Startup & Clock State
     useEffect(() => {

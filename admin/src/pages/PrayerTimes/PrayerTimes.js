@@ -57,6 +57,8 @@ export default function PrayerTimes() {
   const [status, setStatus] = useState('');
   const [loading, setLoading] = useState(true);
   const [validationErrors, setValidationErrors] = useState({});
+  const [hijriDate, setHijriDate] = useState('');
+  const [sunrise, setSunrise] = useState('');
 
   // Schedule state
   const [scheduled, setScheduled] = useState([]);
@@ -66,17 +68,57 @@ export default function PrayerTimes() {
   const [schedSaving, setSchedSaving] = useState(false);
 
   const fetchTimes = async () => {
-    const { data } = await supabase.from('prayer_times').select('*');
-    if (data) {
-      const map = {};
-      data.forEach(row => { map[row.prayer] = { adhan: row.adhan, iqamah: row.iqamah }; });
-      setTimes(map);
-      setEditing(Object.fromEntries(
-        data.filter(r => !NON_EDITABLE.includes(r.prayer))
-            .map(r => [r.prayer, r.iqamah])
-      ));
+    try {
+      // 1. Fetch from Supabase
+      const { data: dbData } = await supabase.from('prayer_times').select('*');
+      const dbMap = {};
+      if (dbData) {
+        dbData.forEach(row => { dbMap[row.prayer] = row.iqamah; });
+      }
+
+      // 2. Fetch from Aladhan
+      const lat = process.env.REACT_APP_ALADHAN_LATITUDE || '33.201662695006874';
+      const lng = process.env.REACT_APP_ALADHAN_LONGITUDE || '-97.14494994434574';
+      const now = new Date();
+      const date = `${String(now.getDate()).padStart(2, '0')}-${String(now.getMonth() + 1).padStart(2, '0')}-${now.getFullYear()}`;
+      const url = `https://api.aladhan.com/v1/timings/${date}?latitude=${lat}&longitude=${lng}&method=2`;
+      
+      const res = await fetch(url);
+      const json = await res.json();
+      
+      if (json.code === 200 && json.data) {
+        const aladhan = json.data.timings;
+        const hijri = json.data.date.hijri;
+        setHijriDate(`${hijri.month.en} ${hijri.day}, ${hijri.year}`);
+        setSunrise(aladhan.Sunrise.split(' ')[0]);
+
+        const map = {};
+        PRAYERS.forEach(p => {
+          const key = p === 'zuhr' ? 'Dhuhr' : (p.charAt(0).toUpperCase() + p.slice(1));
+          const adhan = aladhan[key].split(' ')[0];
+          let iqamah = dbMap[p] || '';
+
+          // Maghrib auto-calculation: Adhan + 10 mins
+          if (p === 'maghrib') {
+            const [h, m] = adhan.split(':').map(Number);
+            const total = h * 60 + m + 10;
+            iqamah = `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+          }
+
+          map[p] = { adhan, iqamah };
+        });
+
+        setTimes(map);
+        setEditing(Object.fromEntries(
+          PRAYERS.filter(p => !NON_EDITABLE.includes(p))
+                 .map(p => [p, map[p].iqamah])
+        ));
+      }
+    } catch (e) {
+      console.error('Error fetching times:', e);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const fetchScheduled = async () => {
@@ -228,6 +270,17 @@ export default function PrayerTimes() {
         <button className="btn btn-green" onClick={handleSave} disabled={saving || Object.keys(validationErrors).length > 0}>
           <SaveIcon /> {saving ? 'Saving...' : 'Save Changes'}
         </button>
+      </div>
+
+      <div className="pt-top-stats">
+        <div className="pt-stat-item">
+          <span className="pt-stat-label">Hijri Date</span>
+          <span className="pt-stat-value">{hijriDate || '-'}</span>
+        </div>
+        <div className="pt-stat-item">
+          <span className="pt-stat-label">Sunrise</span>
+          <span className="pt-stat-value">{sunrise ? to12(sunrise) : '-'}</span>
+        </div>
       </div>
 
       {status && (
