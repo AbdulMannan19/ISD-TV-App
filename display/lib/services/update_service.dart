@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:apk_sideload/install_apk.dart';
+// import 'package:apk_sideload/install_apk.dart';
 
 class UpdateService {
   static const _repo = 'AbdulMannan19/ISD-TV-Display-System';
@@ -11,6 +11,9 @@ class UpdateService {
   static const _prefKey = 'last_installed_release';
 
   static Future<void> checkForUpdate() async {
+    // UPDATES DISABLED FOR PLAY STORE MOBILE BRANCH
+    return;
+    /*
     if (!Platform.isAndroid) return;
 
     try {
@@ -57,7 +60,8 @@ class UpdateService {
       await File(apkPath).writeAsBytes(apkResponse.bodyBytes);
 
       await prefs.setString(_prefKey, tagName);
-      await InstallApk().installApk(apkPath);
+      // await InstallApk().installApk(apkPath);
     } catch (_) {}
+    */
   }
 }

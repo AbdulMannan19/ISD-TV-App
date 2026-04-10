@@ -4,11 +4,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:apk_sideload/install_apk.dart';
+// import 'package:apk_sideload/install_apk.dart';
 import '../services/theme_service.dart';
 import '../theme/theme_config.dart';
 import '../services/navigation_service.dart';
 import 'package:flutter/foundation.dart'; // For kIsWeb
+import '../utils/responsive.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -110,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, _latestVersion);
-      await InstallApk().installApk(apkPath);
+      // await InstallApk().installApk(apkPath);
 
       setState(() { _status = 'Install triggered'; _downloading = false; _currentVersion = _latestVersion; });
     } catch (e) {
@@ -162,11 +163,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         const SizedBox(height: 4),
                         Text('Installed: $_currentVersion',
                           style: TextStyle(color: theme.textMuted, fontSize: 14)),
-                        const SizedBox(height: 32),
-                        _buildUpdateSection(theme),
-                        if (!kIsWeb) ...[
+                        // 1. Update Section (DANGEROUS FOR PLAY STORE)
+                        // Only show this on non-mobile Android devices (TV Boxes)
+                        if (!kIsWeb && Platform.isAndroid && !ResponsiveHelper.isMobile(context)) ...[
+                          _buildUpdateSection(theme),
                           const SizedBox(height: 24),
                           Divider(color: theme.text.withOpacity(0.1)),
+                        ],
+
+                        // 2. System Maintenance (SAFE FOR PLAY STORE)
+                        // Show this on all Android devices (Mobile, Tablet, and TV)
+                        if (!kIsWeb && Platform.isAndroid) ...[
                           const SizedBox(height: 24),
                           Text('System Maintenance',
                             style: TextStyle(color: theme.text.withOpacity(0.5), fontSize: 13, fontWeight: FontWeight.bold, letterSpacing: 1.2)),
@@ -178,15 +185,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 theme, 
                                 icon: Icons.settings, 
                                 label: 'Android Settings', 
-                                onTap: () {
-                                  if (Platform.isAndroid) {
-                                    NavigationService.openSettings();
-                                  } else {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Android Settings is only available on the TV box.'))
-                                    );
-                                  }
-                                },
+                                onTap: () => NavigationService.openSettings(),
                               ),
                             ],
                           ),
