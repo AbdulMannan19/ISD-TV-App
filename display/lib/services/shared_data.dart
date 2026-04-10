@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import 'prayer_times_service.dart';
 import 'daily_content_service.dart';
 
@@ -39,7 +40,7 @@ class SharedData {
       
       await _loadIqamahFromDb();
       _calculateLastThird();
-      _computeNextTarget();
+      recompute(); // Ensures _iqamahDateTimes is built from current prayers list
       return true;
     } catch (_) {
       return false;
@@ -267,12 +268,23 @@ class SharedData {
       }).toList();
       times.sort();
       _iqamahDateTimes = times;
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("SharedData: _loadIqamahFromDb failed (likely RLS): $e");
+    } finally {
+      // Sync list even on failure to use whatever defaults we have
+      _updateIqamahDateTimes();
+    }
   }
 
   void _computeNextTarget() {
     final now = this.now;
     _nextIqamahTarget = null;
+    
+    // Ensure we have a list to search
+    if (_iqamahDateTimes.isEmpty) {
+      _updateIqamahDateTimes();
+    }
+
     for (final dt in _iqamahDateTimes) {
       if (dt.isAfter(now)) {
         _nextIqamahTarget = dt;
@@ -341,7 +353,19 @@ class SharedData {
     }
 
     // If no iqamah is after now today, the next one is Fajr (index 0).
-    if (target == null) return 0;
+    if (target == null && _iqamahDateTimes.isNotEmpty) return 0;
+
+    // If still no target found (e.g. empty list), force a rebuild
+    if (target == null) {
+      _updateIqamahDateTimes();
+      for (final dt in _iqamahDateTimes) {
+        if (dt.isAfter(now)) {
+          target = dt;
+          break;
+        }
+      }
+      if (target == null) return 0; // Final fallback to Fajr
+    }
 
     // Check if target matches Jumu'ah time on Fridays
     if (now.weekday == DateTime.friday && jummah.isNotEmpty) {

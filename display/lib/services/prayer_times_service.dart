@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -114,7 +115,8 @@ class PrayerTimesService {
         times[row['prayer'] as String] = _to12(row['iqamah'] as String);
       }
       return times;
-    } catch (_) {
+    } catch (e) {
+      debugPrint("PrayerTimesService: _fetchIqamahFromDb failed (likely RLS): $e");
       return {};
     }
   }
@@ -140,7 +142,9 @@ class PrayerTimesService {
         {'prayer': 'isha', 'adhan': ishaA, 'iqamah': _to24(ishaI)},
       ];
       await _supabase.from('prayer_times').upsert(rows);
-    } catch (_) {}
+    } catch (e) {
+      debugPrint("PrayerTimesService: _updateDbTimes failed (likely RLS): $e");
+    }
   }
 
   String _addMinutes(String time24, int minutes) {
