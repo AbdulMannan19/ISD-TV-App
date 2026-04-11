@@ -24,6 +24,9 @@ adb shell cmd package set-home-activity com.isd.display/com.isd.display.MainActi
 adb shell cmd shortcut get-default-launcher
 adb shell pm disable-user --user 0 com.google.android.tvlauncher
 
+For generating an app bundle
+flutter build appbundle --release
+
 
 # ISD TV Display System
 
