@@ -26,10 +26,6 @@ adb shell pm disable-user --user 0 com.google.android.tvlauncher
 For generating an app bundle
 flutter build appbundle --release
 
-To Dos:
-
-* [ ] Fix the referesh/fetching from the db like every hour
-
 # ISD TV Display System
 
 The **ISD (Islamic Society of Denton) TV Display System** is a comprehensive, dual-component application designed to effortlessly manage and beautifully display prayer times, announcements, and Islamic content on Masjid TV screens.
