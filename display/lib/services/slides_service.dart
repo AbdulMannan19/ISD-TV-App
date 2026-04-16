@@ -4,26 +4,38 @@ import 'shared_data.dart';
 class SlidesService {
   final _supabase = Supabase.instance.client;
 
-  Future<List<Map<String, dynamic>>> getActiveSlides() async {
+  /// Fetches all slide rows from the database (unfiltered).
+  /// Use this to get the raw data for both [getActiveSlides] filtering
+  /// and [getNextTransitionTime] boundary calculation in a single query.
+  Future<List<Map<String, dynamic>>> fetchAllSlides() async {
     try {
       final response = await _supabase
           .from('slides')
           .select('*')
           .order('display_order', ascending: true);
-
-      final now = SharedData.instance.now;
-      final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      final dayName = _dayName(now.weekday);
-
-      return List<Map<String, dynamic>>.from(response)
-          .where((row) => row['is_active'] != false)
-          .where((row) => _matchesDate(row, todayStr))
-          .where((row) => _matchesDay(row, dayName))
-          .where((row) => _matchesTime(row, now))
-          .toList();
+      return List<Map<String, dynamic>>.from(response);
     } catch (_) {
       return [];
     }
+  }
+
+  /// Filters the given [allRows] to only those that should be displayed right now.
+  List<Map<String, dynamic>> filterActiveSlides(List<Map<String, dynamic>> allRows) {
+    final now = SharedData.instance.now;
+    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final dayName = _dayName(now.weekday);
+
+    return allRows
+        .where((row) => row['is_active'] != false)
+        .where((row) => _matchesDate(row, todayStr))
+        .where((row) => _matchesDay(row, dayName))
+        .where((row) => _matchesTime(row, now))
+        .toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getActiveSlides() async {
+    final allRows = await fetchAllSlides();
+    return filterActiveSlides(allRows);
   }
 
   bool _matchesDate(Map<String, dynamic> row, String todayStr) {
@@ -93,6 +105,55 @@ class SlidesService {
       }
       final parts = t.split(':');
       return int.parse(parts[0]) * 60 + int.parse(parts[1]);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Returns the nearest future [DateTime] at which any slide's eligibility
+  /// will change (a start or end time boundary), or null if there are none
+  /// left today.  Accepts the raw rows already fetched by [getActiveSlides]
+  /// so we avoid a duplicate database round-trip.
+  DateTime? getNextTransitionTime(List<Map<String, dynamic>> allRows) {
+    try {
+      final now = SharedData.instance.now;
+      final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      final dayName = _dayName(now.weekday);
+      final nowMin = now.hour * 60 + now.minute;
+
+      final boundaries = <DateTime>[];
+
+      for (final row in allRows) {
+        // Skip inactive or wrong date/day — their time boundaries don't matter today
+        if (row['is_active'] == false) continue;
+        if (!_matchesDate(row, todayStr)) continue;
+        if (!_matchesDay(row, dayName)) continue;
+
+        final startType = (row['start_time_type'] as String?) ?? 'fixed';
+        final startVal = (row['start_time_value'] as String?) ?? '';
+        final endType = (row['end_time_type'] as String?) ?? 'fixed';
+        final endVal = (row['end_time_value'] as String?) ?? '';
+
+        final startMin = _resolveTimeMinutes(startType, startVal, now);
+        final endMin = _resolveTimeMinutes(endType, endVal, now);
+
+        // If the start time is in the future, that's a boundary (slide will appear)
+        if (startMin != null && startMin > nowMin) {
+          boundaries.add(DateTime(now.year, now.month, now.day, startMin ~/ 60, startMin % 60));
+        }
+
+        // If the end time is in the future, that's a boundary (slide will disappear)
+        // We add 1 minute because the filter uses `nowMin > endMin` (exclusive),
+        // so the slide is still shown at endMin and should be removed at endMin + 1.
+        if (endMin != null && endMin >= nowMin) {
+          final expiry = endMin + 1;
+          boundaries.add(DateTime(now.year, now.month, now.day, expiry ~/ 60, expiry % 60));
+        }
+      }
+
+      if (boundaries.isEmpty) return null;
+      boundaries.sort();
+      return boundaries.first;
     } catch (_) {
       return null;
     }

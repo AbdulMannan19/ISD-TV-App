@@ -65,8 +65,9 @@ class _ContentScreenState extends State<ContentScreen> {
   }
 
   String _formatDate(DateTime dt) {
+    const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
     const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-    return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+    return '${days[dt.weekday - 1]}, ${months[dt.month - 1]} ${dt.day}, ${dt.year}';
   }
 
   double _dynamicFontSize(String text, {bool isMobile = false}) {
@@ -265,12 +266,18 @@ class _ContentScreenState extends State<ContentScreen> {
                   // Mosque name + date block
           Column(children: [
             !isPortrait && isSmallHeight 
-              ? Text('Islamic Society of Denton', textAlign: TextAlign.center, style: TextStyle(color: theme.accentBright, fontSize: 16, fontWeight: FontWeight.w600)) 
-              : Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-                  decoration: BoxDecoration(border: Border.all(color: theme.text.withOpacity(0.2)), borderRadius: BorderRadius.circular(8)),
-                  child: Text('Islamic Society of Denton', textAlign: TextAlign.center,
-                    style: TextStyle(color: theme.accentBright, fontSize: 17, fontWeight: FontWeight.w600)),
+              ? GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                  child: Text('Islamic Society of Denton', textAlign: TextAlign.center, style: TextStyle(color: theme.accentBright, fontSize: 16, fontWeight: FontWeight.w600)),
+                )
+              : GestureDetector(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                    decoration: BoxDecoration(border: Border.all(color: theme.text.withOpacity(0.2)), borderRadius: BorderRadius.circular(8)),
+                    child: Text('Islamic Society of Denton', textAlign: TextAlign.center,
+                      style: TextStyle(color: theme.accentBright, fontSize: 17, fontWeight: FontWeight.w600)),
+                  ),
                 ),
             SizedBox(height: isSmallHeight ? 4 : 8),
             Text(_formatDate(_now), textAlign: TextAlign.center,
@@ -461,8 +468,6 @@ class _ContentScreenState extends State<ContentScreen> {
           Text("JUMU'AH", style: TextStyle(color: isHighlighted ? highlightMain : theme.text, fontSize: 16, fontWeight: highlightWeight)),
           const SizedBox(width: 16),
           _subscriptTime(time, 20, highlightWeight, theme, isAccent: true, isNext: isNext, isCurrent: isCurrent),
-          const SizedBox(width: 12),
-          Icon(Icons.mosque, size: 20, color: theme.marker.withOpacity(0.5)),
         ],
       ),
     );
@@ -585,10 +590,7 @@ class _ContentScreenState extends State<ContentScreen> {
               ],
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-              child: Icon(Icons.mosque, size: 24, color: theme.marker.withOpacity(0.5)),
-            ),
+            SizedBox.shrink(),
           ],
         ),
       ),

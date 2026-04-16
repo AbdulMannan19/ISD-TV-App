@@ -38,11 +38,6 @@ class SilenceScreen extends StatelessWidget {
               ],
             ),
           ),
-          Positioned(
-            bottom: isMobile ? 20 : 40,
-            right: isMobile ? 20 : 40,
-            child: _buildMosqueLogo(isMobile),
-          ),
         ],
       ),
     );
@@ -56,18 +51,4 @@ class SilenceScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMosqueLogo(bool isMobile) {
-    return Container(
-      padding: EdgeInsets.all(isMobile ? 8 : 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: const Color(0xFF374151), width: 2),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Icon(
-        Icons.mosque,
-        size: isMobile ? 24 : 32,
-        color: const Color(0xFF6B7280),
-      ),
-    );
-  }
 }
