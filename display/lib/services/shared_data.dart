@@ -9,7 +9,7 @@ class SharedData {
 
   // --- SIMULATION CONFIG ---
   // Set to true to enable keyboard shortcuts and UI for time testing
-  static const bool configEnableSimulation = true;
+  static const bool configEnableSimulation = false;
 
   DateTime? _overrideTime;
   DateTime get now => (configEnableSimulation && _overrideTime != null) ? _overrideTime! : DateTime.now();
