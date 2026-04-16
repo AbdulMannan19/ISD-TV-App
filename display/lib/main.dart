@@ -191,7 +191,7 @@ class _StartupGateState extends State<StartupGate> {
                       'assets/images/app_icon.jpeg',
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => 
-                          const Icon(Icons.mosque, size: 80, color: Colors.white70),
+                          const SizedBox(width: 80, height: 80),
                     ),
                   ),
                 ),
@@ -261,6 +261,7 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
   Timer? _rotationTimer;
   Timer? _midnightTimer;
   Timer? _maghribRefreshTimer;
+  Timer? _slideTransitionTimer;
   Timer? _prayerTimesDebounce;
   RealtimeChannel? _prayerTimesChannel;
   RealtimeChannel? _slidesChannel;
@@ -419,6 +420,24 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
         .subscribe();
   }
 
+  /// Schedules a one-shot timer for the exact moment the next slide should
+  /// appear or disappear based on its time window — same pattern as the
+  /// iqamah lock timer in [DisplayModeService].
+  void _scheduleSlideTransition(List<Map<String, dynamic>> allRows) {
+    _slideTransitionTimer?.cancel();
+    final nextTime = SlidesService().getNextTransitionTime(allRows);
+    if (nextTime == null) return;
+    final delay = nextTime.difference(SharedData.instance.now);
+    if (delay.isNegative) {
+      // Boundary already passed (race condition) — rebuild immediately
+      _buildScreens();
+      return;
+    }
+    _slideTransitionTimer = Timer(delay, () {
+      if (mounted) _buildScreens();
+    });
+  }
+
   int _remapIndexAfterSlideListChange(
     int oldIndex,
     List<Object?> oldSlideIds,
@@ -454,8 +473,11 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
     final seq = ++_slideBuildSeq;
     final oldSlideIds = List<Object?>.from(_lastSlideRowIds);
 
-    final slides = await SlidesService().getActiveSlides();
+    final slidesService = SlidesService();
+    final allRows = await slidesService.fetchAllSlides();
     if (!mounted || seq != _slideBuildSeq) return;
+
+    final slides = slidesService.filterActiveSlides(allRows);
 
     final newSlideIds = slides.map<Object?>((s) => s['id']).toList();
     final remappedIndex = _remapIndexAfterSlideListChange(_currentIndex, oldSlideIds, newSlideIds);
@@ -490,6 +512,7 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
         _lastSlideRowIds = newSlideIds;
       });
       _scheduleNextRotation();
+      _scheduleSlideTransition(allRows);
     }
   }
 
@@ -520,6 +543,7 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
     _rotationTimer?.cancel();
     _midnightTimer?.cancel();
     _maghribRefreshTimer?.cancel();
+    _slideTransitionTimer?.cancel();
     if (_slidesChannel != null) {
       Supabase.instance.client.removeChannel(_slidesChannel!);
     }

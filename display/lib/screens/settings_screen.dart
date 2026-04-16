@@ -156,7 +156,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.mosque, size: 48, color: theme.marker.withOpacity(0.6)),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset('assets/images/logo.png', width: 48, height: 48, fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Icon(Icons.image, size: 48, color: theme.marker.withOpacity(0.6))),
+                        ),
                         const SizedBox(height: 16),
                         Text('ISD Prayer Times',
                           style: TextStyle(color: theme.text, fontSize: 20, fontWeight: FontWeight.w600)),

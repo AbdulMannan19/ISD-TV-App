@@ -214,10 +214,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
           ),
           Positioned(
             right: 0,
-            child: GestureDetector(
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
-              child: Icon(Icons.mosque, size: isSmallHeight ? 22 : 28, color: theme.marker.withOpacity(0.5)),
-            ),
+            child: SizedBox.shrink(),
           ),
         ],
       ),
@@ -343,27 +340,32 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 width: isSmallHeight ? 45 : 80,
                 height: isSmallHeight ? 45 : 80,
                 decoration: BoxDecoration(
-                  color: theme.bg,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: theme.accent.withOpacity(0.5), width: 2),
                 ),
-                child: Image.asset('assets/images/qr_code.jpeg', fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Center(child: Icon(Icons.qr_code_2, size: isSmallHeight ? 35 : 50, color: Colors.black54))),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Image.asset('assets/images/logo.png', fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(child: Icon(Icons.image, size: isSmallHeight ? 35 : 50, color: Colors.white54))),
+                ),
               ),
               const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.white38),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Islamic Society of Denton',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: theme.accentBright,
-                    fontSize: isSmallHeight ? 13 : 20,
-                    fontWeight: FontWeight.w600,
+              GestureDetector(
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen())),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.white38),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'Islamic Society of Denton',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: theme.accentBright,
+                      fontSize: isSmallHeight ? 13 : 20,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
