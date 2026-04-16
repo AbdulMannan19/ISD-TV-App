@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-// import 'package:apk_sideload/install_apk.dart';
+import 'package:apk_sideload/install_apk.dart';
 import '../services/theme_service.dart';
 import '../theme/theme_config.dart';
 import '../services/navigation_service.dart';
@@ -111,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, _latestVersion);
-      // await InstallApk().installApk(apkPath);
+      await InstallApk().installApk(apkPath);
 
       setState(() { _status = 'Install triggered'; _downloading = false; _currentVersion = _latestVersion; });
     } catch (e) {
