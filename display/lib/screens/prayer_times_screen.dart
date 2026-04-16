@@ -345,7 +345,7 @@ class _PrayerTimesScreenState extends State<PrayerTimesScreen> {
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: Image.asset('assets/images/logo.png', fit: BoxFit.cover,
+                  child: Image.asset('assets/images/Logo.png', fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Center(child: Icon(Icons.image, size: isSmallHeight ? 35 : 50, color: Colors.white54))),
                 ),
               ),

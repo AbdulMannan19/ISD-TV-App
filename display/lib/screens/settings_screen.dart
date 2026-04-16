@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:apk_sideload/install_apk.dart';
+// import 'package:apk_sideload/install_apk.dart';
 import '../services/theme_service.dart';
 import '../theme/theme_config.dart';
 import '../services/navigation_service.dart';
@@ -111,7 +111,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefKey, _latestVersion);
-      await InstallApk().installApk(apkPath);
+      // await InstallApk().installApk(apkPath);
 
       setState(() { _status = 'Install triggered'; _downloading = false; _currentVersion = _latestVersion; });
     } catch (e) {
@@ -153,14 +153,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: theme.text.withOpacity(0.12)),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset('assets/images/logo.png', width: 48, height: 48, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(Icons.image, size: 48, color: theme.marker.withOpacity(0.6))),
-                        ),
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.asset('assets/images/Logo.png', width: 48, height: 48, fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Icon(Icons.image, size: 48, color: theme.marker.withOpacity(0.6))),
+                          ),
                         const SizedBox(height: 16),
                         Text('ISD Prayer Times',
                           style: TextStyle(color: theme.text, fontSize: 20, fontWeight: FontWeight.w600)),
@@ -199,6 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
               ),
+            ),
             ],
           ),
         ),
