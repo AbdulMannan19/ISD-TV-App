@@ -312,7 +312,12 @@ class _ScreenRotatorState extends State<ScreenRotator> with WidgetsBindingObserv
   }
 
   Future<void> _forceRefreshAll() async {
-    // 1. Refresh global prayer times and display modes
+    // 1. Apply any scheduled iqamah changes (date-based, must run after midnight)
+    try {
+      await IqamahScheduleService.applyScheduledChanges();
+    } catch (_) {}
+
+    // 2. Refresh global prayer times and display modes
     await SharedData.instance.init();
     await SharedData.instance.fetchDailyContent();
     await _displayMode.refreshIqamahFromDb();

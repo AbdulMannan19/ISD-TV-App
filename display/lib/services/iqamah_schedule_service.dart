@@ -3,8 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class IqamahScheduleService {
   static final _supabase = Supabase.instance.client;
 
-  /// Apply scheduled iqamah changes where effective_date <= today.
-  /// Called at midnight and startup.
   static Future<void> applyScheduledChanges() async {
     try {
       final today = DateTime.now();
@@ -23,12 +21,18 @@ class IqamahScheduleService {
         final iqamah = row['iqamah'] as String;
         final id = row['id'];
 
-        await _supabase
-            .from('prayer_times')
-            .update({'iqamah': iqamah})
-            .eq('prayer', prayer);
+        try {
+          await _supabase
+              .from('prayer_times')
+              .update({'iqamah': iqamah})
+              .eq('prayer', prayer);
+        } catch (_) {
+          continue;
+        }
 
-        await _supabase.from('iqamah_schedule').delete().eq('id', id);
+        try {
+          await _supabase.from('iqamah_schedule').delete().eq('id', id);
+        } catch (_) {}
       }
     } catch (_) {}
   }
